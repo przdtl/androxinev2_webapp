@@ -8,7 +8,6 @@ import {
   Tabs,
   Tab,
   Toolbar,
-  Typography,
   useMediaQuery
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -36,10 +35,9 @@ export default function App() {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <AppBar position="sticky" color="transparent" elevation={0}>
-        <Toolbar sx={{ flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
-          <Typography variant="h6">Тренировки</Typography>
-          {!isMobile && (
+      {!isMobile && (
+        <AppBar position="sticky" color="transparent" elevation={0}>
+          <Toolbar sx={{ flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
             <Tabs
               value={value}
               onChange={(_, next) => setValue(next)}
@@ -51,11 +49,11 @@ export default function App() {
                 <Tab key={tab.label} label={tab.label} />
               ))}
             </Tabs>
-          )}
-        </Toolbar>
-      </AppBar>
+          </Toolbar>
+        </AppBar>
+      )}
 
-      <Container sx={{ flex: 1, pb: { xs: 12, sm: 6 } }}>
+      <Container sx={{ flex: 1, pt: { xs: 1, sm: 2 }, pb: { xs: 12, sm: 6 } }}>
         <TabPanel value={value} index={0}>
           <Categories />
         </TabPanel>
@@ -74,10 +72,11 @@ export default function App() {
         <Box
           sx={{
             position: "fixed",
-            bottom: 0,
+            bottom: "calc(env(safe-area-inset-bottom) + 16px)",
             left: 0,
             right: 0,
-            pb: "env(safe-area-inset-bottom)"
+            pb: "calc(env(safe-area-inset-bottom) + 16px)",
+            bgcolor: "background.paper"
           }}
         >
           <BottomNavigation value={value} onChange={(_, next) => setValue(next)} showLabels>

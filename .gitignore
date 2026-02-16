@@ -8,6 +8,9 @@ logs
 **/*.backup.*
 **/*.back.*
 
+dist/
+.env*
+!*.env*.example
 node_modules
 bower_components
 

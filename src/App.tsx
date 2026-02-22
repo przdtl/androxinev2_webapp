@@ -12,11 +12,9 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import CategoryIcon from "@mui/icons-material/Category";
-import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import Categories from "./pages/Categories";
-import Exercises from "./pages/Exercises";
 import Templates from "./pages/Templates";
 import Sets from "./pages/Sets";
 import { TabPanel } from "./components/TabPanel";
@@ -25,7 +23,6 @@ import { AuthApi } from "./api/endpoints";
 
 const tabs = [
   { label: "Категории", icon: <CategoryIcon /> },
-  { label: "Упражнения", icon: <FitnessCenterIcon /> },
   { label: "Шаблоны", icon: <ViewListIcon /> },
   { label: "Подходы", icon: <PlaylistAddCheckIcon /> }
 ];
@@ -81,12 +78,9 @@ export default function App() {
           <Categories />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <Exercises />
-        </TabPanel>
-        <TabPanel value={value} index={2}>
           <Templates />
         </TabPanel>
-        <TabPanel value={value} index={3}>
+        <TabPanel value={value} index={2}>
           <Sets />
         </TabPanel>
       </Container>

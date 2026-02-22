@@ -14,6 +14,16 @@ export type PaginationParams = {
   size?: number;
 };
 
+export type ExercisesListParams = PaginationParams & {
+  category_id?: string | null;
+};
+
+export type SetsListParams = PaginationParams & {
+  exercise_id?: string | null;
+  created_from?: string | null;
+  created_to?: string | null;
+};
+
 // Auth types
 export type TelegramAuthRequest = {
   init_data: string;
@@ -157,7 +167,7 @@ export const CategoriesApi = {
 
 // Exercises API
 export const ExercisesApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ExercisesListParams) =>
     api.get<Page<Exercise>>("/exercises/", { params }),
   create: (data: CreateExerciseRequest) =>
     api.post<Exercise>("/exercises/", data),
@@ -171,7 +181,7 @@ export const ExercisesApi = {
 
 // Sets API
 export const SetsApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: SetsListParams) =>
     api.get<Page<SetItem>>("/sets/", { params }),
   create: (data: CreateSetRequest) =>
     api.post<SetItem>("/sets/", data),

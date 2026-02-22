@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import {
   Box,
   Button,
@@ -12,12 +12,16 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  Menu,
+  MenuItem,
   List,
   ListItem,
   ListItemText
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { CategoriesApi, Category } from "../api/endpoints";
 
 export default function Categories() {
@@ -26,6 +30,8 @@ export default function Categories() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState("");
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuCategory, setMenuCategory] = useState<Category | null>(null);
 
   const loadCategories = async () => {
     setLoading(true);
@@ -46,10 +52,10 @@ export default function Categories() {
   const handleCreate = async () => {
     if (!categoryName.trim()) return;
     try {
-      await CategoriesApi.create({ title: categoryName });
+      const res = await CategoriesApi.create({ title: categoryName });
+      setCategories(prev => [...prev, res.data]);
       setCategoryName("");
       setOpenDialog(false);
-      loadCategories();
     } catch (err) {
       console.error("Ошибка создания категории:", err);
     }
@@ -58,13 +64,23 @@ export default function Categories() {
   const handleUpdate = async () => {
     if (!editingCategory || !categoryName.trim()) return;
     try {
-      await CategoriesApi.update(editingCategory.id, { title: categoryName });
+      const res = await CategoriesApi.update(editingCategory.id, { title: categoryName });
+      setCategories(prev => prev.map(c => c.id === editingCategory.id ? res.data : c));
       setCategoryName("");
       setEditingCategory(null);
       setOpenDialog(false);
-      loadCategories();
     } catch (err) {
       console.error("Ошибка обновления категории:", err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Удалить категорию?")) return;
+    try {
+      await CategoriesApi.remove(id);
+      setCategories((prev) => prev.filter((category) => category.id !== id));
+    } catch (err) {
+      console.error("Ошибка удаления категории:", err);
     }
   };
 
@@ -78,6 +94,16 @@ export default function Categories() {
     setEditingCategory(category);
     setCategoryName(category.title);
     setOpenDialog(true);
+  };
+
+  const openMenu = (event: MouseEvent<HTMLElement>, category: Category) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuCategory(category);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchorEl(null);
+    setMenuCategory(null);
   };
 
   return (
@@ -106,8 +132,8 @@ export default function Categories() {
               <Card key={category.id} sx={{ mb: 1 }}>
                 <ListItem
                   secondaryAction={
-                    <IconButton edge="end" onClick={() => openEditDialog(category)}>
-                      <EditIcon />
+                    <IconButton onClick={(event) => openMenu(event, category)}>
+                      <MoreVertIcon />
                     </IconButton>
                   }
                 >
@@ -118,6 +144,27 @@ export default function Categories() {
           </List>
         )}
       </Stack>
+
+      <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={closeMenu}>
+        <MenuItem
+          onClick={() => {
+            if (menuCategory) openEditDialog(menuCategory);
+            closeMenu();
+          }}
+        >
+          <EditIcon sx={{ mr: 1 }} fontSize="small" />
+          Редактировать
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuCategory) handleDelete(menuCategory.id);
+            closeMenu();
+          }}
+        >
+          <DeleteIcon sx={{ mr: 1 }} fontSize="small" />
+          Удалить
+        </MenuItem>
+      </Menu>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>

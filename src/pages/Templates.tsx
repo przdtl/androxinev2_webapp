@@ -46,10 +46,10 @@ export default function Templates() {
   const handleCreate = async () => {
     if (!templateName.trim()) return;
     try {
-      await TemplatesApi.create({ title: templateName });
+      const res = await TemplatesApi.create({ title: templateName });
+      setTemplates(prev => [...prev, res.data]);
       setTemplateName("");
       setOpenDialog(false);
-      loadTemplates();
     } catch (err) {
       console.error("Ошибка создания шаблона:", err);
     }
@@ -58,11 +58,11 @@ export default function Templates() {
   const handleUpdate = async () => {
     if (!editingTemplate || !templateName.trim()) return;
     try {
-      await TemplatesApi.update(editingTemplate.id, { title: templateName });
+      const res = await TemplatesApi.update(editingTemplate.id, { title: templateName });
+      setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? res.data : t));
       setTemplateName("");
       setEditingTemplate(null);
       setOpenDialog(false);
-      loadTemplates();
     } catch (err) {
       console.error("Ошибка обновления шаблона:", err);
     }
@@ -72,7 +72,7 @@ export default function Templates() {
     if (!confirm("Удалить шаблон?")) return;
     try {
       await TemplatesApi.remove(id);
-      loadTemplates();
+      setTemplates(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error("Ошибка удаления шаблона:", err);
     }

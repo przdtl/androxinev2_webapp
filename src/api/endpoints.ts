@@ -151,7 +151,8 @@ export const CategoriesApi = {
     api.post<Category>("/categories/", data),
   get: (id: string) => api.get<Category>(`/categories/${id}/`),
   update: (id: string, data: UpdateCategoryRequest) =>
-    api.patch<Category>(`/categories/${id}/`, data)
+    api.patch<Category>(`/categories/${id}/`, data),
+  remove: (id: string) => api.delete(`/categories/${id}/`)
 };
 
 // Exercises API
@@ -163,6 +164,7 @@ export const ExercisesApi = {
   get: (id: string) => api.get<Exercise>(`/exercises/${id}/`),
   update: (id: string, data: UpdateExerciseRequest) =>
     api.patch<Exercise>(`/exercises/${id}/`, data),
+  remove: (id: string) => api.delete(`/exercises/${id}/`),
   archive: (id: string) => api.post(`/exercises/${id}/archive/`),
   restore: (id: string) => api.post(`/exercises/${id}/restore/`)
 };

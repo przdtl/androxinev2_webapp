@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import {
   Box,
   Button,
@@ -11,11 +11,12 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  Menu,
+  MenuItem,
   List,
   ListItem,
   ListItemText,
   Select,
-  MenuItem,
   FormControl,
   InputLabel,
   Chip
@@ -24,6 +25,8 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { ExercisesApi, CategoriesApi, Exercise, Category, CategorySchema } from "../api/endpoints";
 
 export default function Exercises() {
@@ -35,6 +38,8 @@ export default function Exercises() {
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseShort, setExerciseShort] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuExercise, setMenuExercise] = useState<Exercise | null>(null);
 
   const loadExercises = async () => {
     setLoading(true);
@@ -65,16 +70,16 @@ export default function Exercises() {
   const handleCreate = async () => {
     if (!exerciseName.trim() || !exerciseShort.trim() || !categoryId) return;
     try {
-      await ExercisesApi.create({
+      const res = await ExercisesApi.create({
         title: exerciseName,
         short: exerciseShort,
         category_id: categoryId
       });
+      setExercises(prev => [...prev, res.data]);
       setExerciseName("");
       setExerciseShort("");
       setCategoryId("");
       setOpenDialog(false);
-      loadExercises();
     } catch (err) {
       console.error("Ошибка создания упражнения:", err);
     }
@@ -83,16 +88,16 @@ export default function Exercises() {
   const handleUpdate = async () => {
     if (!editingExercise || !exerciseName.trim() || !exerciseShort.trim()) return;
     try {
-      await ExercisesApi.update(editingExercise.id, {
+      const res = await ExercisesApi.update(editingExercise.id, {
         title: exerciseName,
         short: exerciseShort
       });
+      setExercises(prev => prev.map(e => e.id === editingExercise.id ? res.data : e));
       setExerciseName("");
       setExerciseShort("");
       setCategoryId("");
       setEditingExercise(null);
       setOpenDialog(false);
-      loadExercises();
     } catch (err) {
       console.error("Ошибка обновления упражнения:", err);
     }
@@ -101,7 +106,7 @@ export default function Exercises() {
   const handleArchive = async (id: string) => {
     try {
       await ExercisesApi.archive(id);
-      loadExercises();
+      setExercises(prev => prev.map(e => e.id === id ? { ...e, is_archived: true } : e));
     } catch (err) {
       console.error("Ошибка архивирования:", err);
     }
@@ -110,9 +115,19 @@ export default function Exercises() {
   const handleRestore = async (id: string) => {
     try {
       await ExercisesApi.restore(id);
-      loadExercises();
+      setExercises(prev => prev.map(e => e.id === id ? { ...e, is_archived: false } : e));
     } catch (err) {
       console.error("Ошибка восстановления:", err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Удалить упражнение?")) return;
+    try {
+      await ExercisesApi.remove(id);
+      setExercises((prev) => prev.filter((exercise) => exercise.id !== id));
+    } catch (err) {
+      console.error("Ошибка удаления упражнения:", err);
     }
   };
 
@@ -130,6 +145,16 @@ export default function Exercises() {
     setExerciseShort(exercise.short);
     setCategoryId(exercise.category?.id || "");
     setOpenDialog(true);
+  };
+
+  const openMenu = (event: MouseEvent<HTMLElement>, exercise: Exercise) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuExercise(exercise);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchorEl(null);
+    setMenuExercise(null);
   };
 
   const getCategoryName = (category?: CategorySchema) => {
@@ -160,20 +185,9 @@ export default function Exercises() {
               <Card key={exercise.id} sx={{ mb: 1 }}>
                 <ListItem
                   secondaryAction={
-                    <Stack direction="row" spacing={1}>
-                      <IconButton onClick={() => openEditDialog(exercise)}>
-                        <EditIcon />
-                      </IconButton>
-                      {exercise.is_archived ? (
-                        <IconButton onClick={() => handleRestore(exercise.id)}>
-                          <UnarchiveIcon />
-                        </IconButton>
-                      ) : (
-                        <IconButton onClick={() => handleArchive(exercise.id)}>
-                          <ArchiveIcon />
-                        </IconButton>
-                      )}
-                    </Stack>
+                    <IconButton onClick={(event) => openMenu(event, exercise)}>
+                      <MoreVertIcon />
+                    </IconButton>
                   }
                 >
                   <ListItemText
@@ -191,6 +205,45 @@ export default function Exercises() {
           </List>
         )}
       </Stack>
+
+      <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={closeMenu}>
+        <MenuItem
+          onClick={() => {
+            if (menuExercise) openEditDialog(menuExercise);
+            closeMenu();
+          }}
+        >
+          <EditIcon sx={{ mr: 1 }} fontSize="small" />
+          Редактировать
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuExercise) handleDelete(menuExercise.id);
+            closeMenu();
+          }}
+        >
+          <DeleteIcon sx={{ mr: 1 }} fontSize="small" />
+          Удалить
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (!menuExercise) return;
+            if (menuExercise.is_archived) {
+              handleRestore(menuExercise.id);
+            } else {
+              handleArchive(menuExercise.id);
+            }
+            closeMenu();
+          }}
+        >
+          {menuExercise?.is_archived ? (
+            <UnarchiveIcon sx={{ mr: 1 }} fontSize="small" />
+          ) : (
+            <ArchiveIcon sx={{ mr: 1 }} fontSize="small" />
+          )}
+          {menuExercise?.is_archived ? "Восстановить" : "Архивировать"}
+        </MenuItem>
+      </Menu>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>

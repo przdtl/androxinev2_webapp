@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AppBar,
   Box,
@@ -20,6 +20,8 @@ import Exercises from "./pages/Exercises";
 import Templates from "./pages/Templates";
 import Sets from "./pages/Sets";
 import { TabPanel } from "./components/TabPanel";
+import { useTelegramInitData } from "./hooks/useTelegramInitData";
+import { AuthApi } from "./api/endpoints";
 
 const tabs = [
   { label: "Категории", icon: <CategoryIcon /> },
@@ -32,6 +34,27 @@ export default function App() {
   const [value, setValue] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { initData, initDataUnsafe } = useTelegramInitData();
+
+  useEffect(() => {
+    console.log("📱 Telegram WebApp Init Data:", initData);
+    console.log("📋 Init Data Unsafe:", initDataUnsafe);
+    
+    // Готов к использованию
+    window.Telegram?.WebApp?.ready();
+
+    // Авторизация через Telegram
+    if (initData) {
+      AuthApi.telegramAuth(initData)
+        .then((res) => {
+          localStorage.setItem("access_token", res.data.access_token);
+          console.log("✅ Авторизация успешна");
+        })
+        .catch((err) => {
+          console.error("❌ Ошибка авторизации:", err);
+        });
+    }
+  }, [initData, initDataUnsafe]);
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>

@@ -1,46 +1,206 @@
 import { api } from "./client";
 
-export type Category = { id: number; name: string };
-export type Exercise = { id: number; name: string; archived?: boolean; categoryId?: number };
-export type SetItem = { id: number; exerciseId: number; reps?: number; weight?: number; createdAt?: string };
-export type Template = { id: number; name: string };
-export type TemplateExercise = { id: number; templateId: number; exerciseId: number };
+// Common types
+export type Page<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+};
 
+export type PaginationParams = {
+  page?: number;
+  size?: number;
+};
+
+// Auth types
+export type TelegramAuthRequest = {
+  init_data: string;
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: string;
+};
+
+// Category types
+export type CategorySchema = {
+  id: string;
+  title: string;
+};
+
+export type Category = {
+  id: string;
+  title: string;
+};
+
+export type CreateCategoryRequest = {
+  title: string;
+};
+
+export type UpdateCategoryRequest = {
+  title: string;
+};
+
+// Exercise types
+export type Exercise = {
+  id: string;
+  title: string;
+  short: string;
+  category: CategorySchema;
+  is_archived: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type CreateExerciseRequest = {
+  category_id: string;
+  title: string;
+  short: string;
+};
+
+export type UpdateExerciseRequest = {
+  title?: string;
+  short?: string;
+};
+
+// Set types
+export type SetItem = {
+  id: string;
+  user_id?: number;
+  exercise_id?: string;
+  exercise?: Exercise;
+  reps: number;
+  weight: number;
+  created_at?: string;
+};
+
+export type CreateSetRequest = {
+  exercise_id: string;
+  reps: number;
+  weight: number;
+};
+
+export type UpdateSetRequest = {
+  reps?: number;
+  weight?: number;
+};
+
+// Template Exercise types
+export type TemplateExercise = {
+  id: string;
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number | null;
+  exercise: Exercise;
+};
+
+export type CreateTemplateExerciseRequest = {
+  exercise_id: string;
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number | null;
+};
+
+export type UpdateTemplateExerciseRequest = {
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number | null;
+};
+
+export type TemplateExerciseCreateInput = {
+  exercise_id: string;
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number | null;
+};
+
+// Template types
+export type Template = {
+  id: string;
+  title: string;
+  day_of_week?: number | null;
+  created_at: string;
+  updated_at: string;
+  exercises?: TemplateExercise[];
+};
+
+export type CreateTemplateRequest = {
+  title: string;
+  day_of_week?: number | null;
+  exercises?: TemplateExerciseCreateInput[];
+};
+
+export type UpdateTemplateRequest = {
+  title?: string;
+  day_of_week?: number | null;
+};
+
+// Auth API
+export const AuthApi = {
+  telegramAuth: (initData: string) =>
+    api.post<AuthResponse>("/auth/telegram/", { init_data: initData })
+};
+
+// Categories API
 export const CategoriesApi = {
-  list: () => api.get<Category[]>("/api/categories")
+  list: (params?: PaginationParams) =>
+    api.get<Page<Category>>("/categories/", { params }),
+  create: (data: CreateCategoryRequest) =>
+    api.post<Category>("/categories/", data),
+  get: (id: string) => api.get<Category>(`/categories/${id}/`),
+  update: (id: string, data: UpdateCategoryRequest) =>
+    api.patch<Category>(`/categories/${id}/`, data)
 };
 
+// Exercises API
 export const ExercisesApi = {
-  list: () => api.get<Exercise[]>("/api/exercises"),
-  create: (payload: Partial<Exercise>) => api.post<Exercise>("/api/exercises", payload),
-  get: (id: number) => api.get<Exercise>(`/api/exercises/${id}`),
-  update: (id: number, payload: Partial<Exercise>) =>
-    api.patch<Exercise>(`/api/exercises/${id}`, payload),
-  archive: (id: number) => api.post(`/api/exercises/${id}/archive`),
-  restore: (id: number) => api.post(`/api/exercises/${id}/restore`)
+  list: (params?: PaginationParams) =>
+    api.get<Page<Exercise>>("/exercises/", { params }),
+  create: (data: CreateExerciseRequest) =>
+    api.post<Exercise>("/exercises/", data),
+  get: (id: string) => api.get<Exercise>(`/exercises/${id}/`),
+  update: (id: string, data: UpdateExerciseRequest) =>
+    api.patch<Exercise>(`/exercises/${id}/`, data),
+  archive: (id: string) => api.post(`/exercises/${id}/archive/`),
+  restore: (id: string) => api.post(`/exercises/${id}/restore/`)
 };
 
+// Sets API
 export const SetsApi = {
-  list: () => api.get<SetItem[]>("/api/sets"),
-  create: (payload: Partial<SetItem>) => api.post<SetItem>("/api/sets", payload),
-  remove: (id: number) => api.delete(`/api/sets/${id}`)
+  list: (params?: PaginationParams) =>
+    api.get<Page<SetItem>>("/sets/", { params }),
+  create: (data: CreateSetRequest) =>
+    api.post<SetItem>("/sets/", data),
+  get: (id: string) => api.get<SetItem>(`/sets/${id}/`),
+  update: (id: string, data: UpdateSetRequest) =>
+    api.patch<SetItem>(`/sets/${id}/`, data),
+  remove: (id: string) => api.delete(`/sets/${id}/`)
 };
 
+// Templates API
 export const TemplatesApi = {
-  list: () => api.get<Template[]>("/api/templates"),
-  today: () => api.get<Template>("/api/templates/today"),
-  create: (payload: Partial<Template>) => api.post<Template>("/api/templates", payload),
-  update: (id: number, payload: Partial<Template>) =>
-    api.patch<Template>(`/api/templates/${id}`, payload),
-  remove: (id: number) => api.delete(`/api/templates/${id}`)
+  list: (params?: PaginationParams) =>
+    api.get<Page<Template>>("/templates/", { params }),
+  today: (params?: PaginationParams) =>
+    api.get<Page<Template>>("/templates/today/", { params }),
+  create: (data: CreateTemplateRequest) =>
+    api.post<Template>("/templates/", data),
+  update: (id: string, data: UpdateTemplateRequest) =>
+    api.patch<Template>(`/templates/${id}/`, data),
+  remove: (id: string) => api.delete(`/templates/${id}/`)
 };
 
+// Template Exercises API
 export const TemplateExercisesApi = {
-  list: (templateId: number) =>
-    api.get<TemplateExercise[]>(`/api/templates/${templateId}/exercises`),
-  create: (templateId: number, payload: Partial<TemplateExercise>) =>
-    api.post<TemplateExercise>(`/api/templates/${templateId}/exercises`, payload),
-  update: (id: number, payload: Partial<TemplateExercise>) =>
-    api.patch<TemplateExercise>(`/api/template-exercises/${id}`, payload),
-  remove: (id: number) => api.delete(`/api/template-exercises/${id}`)
+  list: (params?: PaginationParams) =>
+    api.get<Page<TemplateExercise>>("/template_exercises/", { params }),
+  create: (data: CreateTemplateExerciseRequest) =>
+    api.post<TemplateExercise>("/template_exercises/", data),
+  update: (id: string, data: UpdateTemplateExerciseRequest) =>
+    api.patch<TemplateExercise>(`/template_exercises/${id}/`, data),
+  remove: (id: string) => api.delete(`/template_exercises/${id}/`)
 };
+
+

@@ -1,39 +1,158 @@
-import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material";
-import { TemplatesApi } from "../api/endpoints";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Button,
+  Card,
+  Stack,
+  Typography,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { TemplatesApi, Template } from "../api/endpoints";
 
 export default function Templates() {
-  const handleRefresh = async () => {
-    await TemplatesApi.list();
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [templateName, setTemplateName] = useState("");
+
+  const loadTemplates = async () => {
+    setLoading(true);
+    try {
+      const res = await TemplatesApi.list();
+      setTemplates(res.data.items);
+    } catch (err) {
+      console.error("Ошибка загрузки шаблонов:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleToday = async () => {
-    await TemplatesApi.today();
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!templateName.trim()) return;
+    try {
+      await TemplatesApi.create({ title: templateName });
+      setTemplateName("");
+      setOpenDialog(false);
+      loadTemplates();
+    } catch (err) {
+      console.error("Ошибка создания шаблона:", err);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingTemplate || !templateName.trim()) return;
+    try {
+      await TemplatesApi.update(editingTemplate.id, { title: templateName });
+      setTemplateName("");
+      setEditingTemplate(null);
+      setOpenDialog(false);
+      loadTemplates();
+    } catch (err) {
+      console.error("Ошибка обновления шаблона:", err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Удалить шаблон?")) return;
+    try {
+      await TemplatesApi.remove(id);
+      loadTemplates();
+    } catch (err) {
+      console.error("Ошибка удаления шаблона:", err);
+    }
+  };
+
+  const openCreateDialog = () => {
+    setEditingTemplate(null);
+    setTemplateName("");
+    setOpenDialog(true);
+  };
+
+  const openEditDialog = (template: Template) => {
+    setEditingTemplate(template);
+    setTemplateName(template.title);
+    setOpenDialog(true);
   };
 
   return (
     <Box>
       <Stack spacing={2}>
-        <Typography variant="h6">Шаблоны</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Шаблоны тренировок и упражнения внутри них.
-        </Typography>
-        <Stack direction="row" spacing={2}>
-          <Button variant="contained" onClick={handleRefresh}>
-            Обновить
-          </Button>
-          <Button variant="outlined" onClick={handleToday}>
-            Сегодня
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">Шаблоны</Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
+            Создать
           </Button>
         </Stack>
-        <Card>
-          <CardContent>
-            <Typography variant="subtitle1">Пример</Typography>
+
+        {loading ? (
+          <Typography>Загрузка...</Typography>
+        ) : templates.length === 0 ? (
+          <Card sx={{ p: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Здесь будет список шаблонов и упражнений.
+              Шаблоны не найдены. Создайте первый шаблон.
             </Typography>
-          </CardContent>
-        </Card>
+          </Card>
+        ) : (
+          <List>
+            {templates.map((template) => (
+              <Card key={template.id} sx={{ mb: 1 }}>
+                <ListItem
+                  secondaryAction={
+                    <Stack direction="row" spacing={1}>
+                      <IconButton onClick={() => openEditDialog(template)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(template.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
+                  }
+                >
+                  <ListItemText primary={template.title} />
+                </ListItem>
+              </Card>
+            ))}
+          </List>
+        )}
       </Stack>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>
+          {editingTemplate ? "Редактировать шаблон" : "Создать шаблон"}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Название"
+            fullWidth
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
+          <Button onClick={editingTemplate ? handleUpdate : handleCreate} variant="contained">
+            {editingTemplate ? "Сохранить" : "Создать"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

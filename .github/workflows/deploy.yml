@@ -1,0 +1,51 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy over SSH
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
+
+            cd "${{ secrets.DEPLOY_PATH }}" || exit 1
+
+            if [ ! -d ".git" ]; then
+              echo "Repository not initialized. Initializing..."
+              git init
+              git remote add origin https://github.com/${{ github.repository }}
+            fi
+
+            git fetch origin
+            git reset --hard origin/master
+
+            # ---------- ENV BACKUP ----------
+            if [ -f ".env" ]; then
+              timestamp=$(date +%Y%m%d_%H%M%S)
+              cp .env ".env.backup_$timestamp"
+            fi
+
+            echo "${{ secrets.ENV }}" > .env
+
+            ls -1t .env.backup_* 2>/dev/null | tail -n +6 | xargs -r rm --
+
+            npm ci --only=production
+
+            npm run build
+            
+          EOF

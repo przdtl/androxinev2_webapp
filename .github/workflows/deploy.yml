@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
             fi
 
             git fetch origin
-            git reset --hard origin/main
+            git reset --hard origin/master
 
             # ---------- ENV BACKUP ----------
             if [ -f ".env" ]; then

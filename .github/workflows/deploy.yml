@@ -32,7 +32,7 @@ jobs:
             fi
 
             git fetch origin
-            git reset --hard origin/master
+            git reset --hard origin/main
 
             # ---------- ENV BACKUP ----------
             if [ -f ".env" ]; then
@@ -44,8 +44,17 @@ jobs:
 
             ls -1t .env.backup_* 2>/dev/null | tail -n +6 | xargs -r rm --
 
-            npm ci --only=production
+            # Диагностика окружения в non-interactive SSH shell
+            node --version
+            npm --version
+            which node
+            which npm
 
+            # Для build нужны devDependencies (tsc/vite)
+            npm ci
             npm run build
+
+            # Опционально: после сборки можно убрать dev-зависимости
+            npm prune --omit=dev
             
           EOF

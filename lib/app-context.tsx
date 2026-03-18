@@ -94,15 +94,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!isReady) return;
       
       try {
+        // In Telegram environment, require valid initData auth.
         if (initData) {
           const { access_token } = await api.authTelegram(initData);
           api.setToken(access_token);
+          setState(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
+          return;
         }
-        setState(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
+
+        // Outside Telegram allow local dev usage only.
+        const isDev = process.env.NODE_ENV === 'development';
+        setState(prev => ({ ...prev, isAuthenticated: isDev, isLoading: false }));
       } catch (error) {
         console.error('Auth error:', error);
-        // Continue without auth for development
-        setState(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
+        setState(prev => ({ ...prev, isAuthenticated: false, isLoading: false }));
       }
     }
     authenticate();
@@ -110,13 +115,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Categories
   const loadCategories = useCallback(async () => {
+    if (!state.isAuthenticated) return;
     try {
       const categories = await api.getCategories();
       setState(prev => ({ ...prev, categories }));
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
-  }, []);
+  }, [state.isAuthenticated]);
 
   const createCategory = useCallback(async (data: CategoryFormData) => {
     const category = await api.createCategory(data);
@@ -143,13 +149,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Exercises
   const loadExercises = useCallback(async (categoryId?: number) => {
+    if (!state.isAuthenticated) return;
     try {
       const exercises = await api.getExercises(categoryId);
       setState(prev => ({ ...prev, exercises }));
     } catch (error) {
       console.error('Failed to load exercises:', error);
     }
-  }, []);
+  }, [state.isAuthenticated]);
 
   const createExercise = useCallback(async (data: ExerciseFormData) => {
     const exercise = await api.createExercise(data);
@@ -194,13 +201,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Templates
   const loadTemplates = useCallback(async () => {
+    if (!state.isAuthenticated) return;
     try {
       const templates = await api.getTemplates();
       setState(prev => ({ ...prev, templates }));
     } catch (error) {
       console.error('Failed to load templates:', error);
     }
-  }, []);
+  }, [state.isAuthenticated]);
 
   const createTemplate = useCallback(async (data: TemplateFormData) => {
     const template = await api.createTemplate(data);
@@ -227,6 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Sets
   const loadSets = useCallback(async (filters?: SetFilters) => {
+    if (!state.isAuthenticated) return;
     try {
       const sets = await api.getSets(filters || state.setFilters);
       setState(prev => ({ ...prev, sets }));

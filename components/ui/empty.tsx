@@ -1,8 +1,9 @@
+import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-function Empty({ className, ...props }: React.ComponentProps<'div'>) {
+function EmptyRoot({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="empty"
@@ -14,6 +15,30 @@ function Empty({ className, ...props }: React.ComponentProps<'div'>) {
     />
   )
 }
+
+function EmptyActions({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="empty-actions"
+      className={cn('flex items-center justify-center gap-2', className)}
+      {...props}
+    />
+  )
+}
+
+function EmptyIcon(props: React.ComponentProps<'div'>) {
+  return <EmptyMedia variant="icon" {...props} />
+}
+
+const Empty = Object.assign(EmptyRoot, {
+  Header: EmptyHeader,
+  Title: EmptyTitle,
+  Description: EmptyDescription,
+  Content: EmptyContent,
+  Media: EmptyMedia,
+  Icon: EmptyIcon,
+  Actions: EmptyActions,
+})
 
 function EmptyHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -101,4 +126,6 @@ export {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyIcon,
+  EmptyActions,
 }

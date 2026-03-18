@@ -13,8 +13,26 @@ export function parseServerDate(date: string | number): Date {
     // Unix timestamp in milliseconds
     return new Date(date);
   }
-  // ISO string
-  return parseISO(date);
+
+  const value = date.trim();
+
+  // Numeric string timestamp support (seconds or milliseconds)
+  if (/^\d+$/.test(value)) {
+    const numeric = Number(value);
+    const millis = numeric < 100000000000 ? numeric * 1000 : numeric;
+    return new Date(millis);
+  }
+
+  // If backend returns UTC datetime without timezone suffix,
+  // treat it as UTC explicitly to avoid local-time misinterpretation.
+  const hasTimePart = value.includes('T');
+  const hasTimezone = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(value);
+  if (hasTimePart && !hasTimezone) {
+    return new Date(`${value}Z`);
+  }
+
+  // ISO string (with timezone or date-only)
+  return parseISO(value);
 }
 
 /**

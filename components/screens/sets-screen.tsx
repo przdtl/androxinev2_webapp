@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, MoreVertical, Pencil, Trash2, Filter, X, ClipboardList, Repeat } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
-import type { WorkoutSet, SetFormData, Exercise } from '@/lib/types';
+import type { WorkoutSet, SetFormData, Exercise, EntityId } from '@/lib/types';
 import { formatTime, formatForInput, parseFromInput, formatForApi, parseServerDate } from '@/lib/date-utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,7 +72,7 @@ export function SetsScreen() {
   const [editingSet, setEditingSet] = useState<WorkoutSet | null>(null);
   const [deletingSet, setDeletingSet] = useState<WorkoutSet | null>(null);
   const [formData, setFormData] = useState<SetFormData>({ 
-    exercise_id: 0,
+    exercise_id: '',
     reps: 0,
     weight: 0,
   });
@@ -82,7 +82,7 @@ export function SetsScreen() {
 
   // Local filter state
   const [localFilters, setLocalFilters] = useState({
-    exercise_id: setFilters.exercise_id?.toString() || '',
+    exercise_id: setFilters.exercise_id ? String(setFilters.exercise_id) : 'all',
     created_from: setFilters.created_from || '',
     created_to: setFilters.created_to || '',
   });
@@ -118,7 +118,7 @@ export function SetsScreen() {
   const handleOpenCreate = () => {
     setEditingSet(null);
     setFormData({ 
-      exercise_id: activeExercises[0]?.id || 0,
+      exercise_id: activeExercises[0]?.id || '',
       reps: 10,
       weight: 0,
     });
@@ -129,7 +129,7 @@ export function SetsScreen() {
 
   const handleOpenEdit = (set: WorkoutSet) => {
     setEditingSet(set);
-    const exerciseId = set.exercise_id || (typeof set.exercise === 'number' ? set.exercise : (set.exercise as Exercise)?.id) || 0;
+    const exerciseId = set.exercise_id || (set.exercise as Exercise)?.id || '';
     setFormData({ 
       exercise_id: exerciseId,
       reps: set.reps,
@@ -147,13 +147,18 @@ export function SetsScreen() {
   };
 
   const handleApplyFilters = () => {
+    const normalizedExerciseId: EntityId | undefined =
+      localFilters.exercise_id && localFilters.exercise_id !== 'all'
+        ? localFilters.exercise_id
+        : undefined;
+
     setSetFilters({
-      exercise_id: localFilters.exercise_id ? parseInt(localFilters.exercise_id) : undefined,
+      exercise_id: normalizedExerciseId,
       created_from: localFilters.created_from || undefined,
       created_to: localFilters.created_to || undefined,
     });
     loadSets({
-      exercise_id: localFilters.exercise_id ? parseInt(localFilters.exercise_id) : undefined,
+      exercise_id: normalizedExerciseId,
       created_from: localFilters.created_from || undefined,
       created_to: localFilters.created_to || undefined,
     });
@@ -162,7 +167,7 @@ export function SetsScreen() {
   };
 
   const handleClearFilters = () => {
-    setLocalFilters({ exercise_id: '', created_from: '', created_to: '' });
+    setLocalFilters({ exercise_id: 'all', created_from: '', created_to: '' });
     setSetFilters({});
     loadSets({});
     setIsFilterSheetOpen(false);
@@ -261,7 +266,7 @@ export function SetsScreen() {
                         <SelectValue placeholder="Все упражнения" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все упражнения</SelectItem>
+                        <SelectItem value="all">Все упражнения</SelectItem>
                         {exercises.map(exercise => (
                           <SelectItem key={exercise.id} value={exercise.id.toString()}>
                             {exercise.title}
@@ -410,8 +415,8 @@ export function SetsScreen() {
             <Field>
               <FieldLabel htmlFor="set-exercise">Упражнение</FieldLabel>
               <Select
-                value={formData.exercise_id.toString()}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, exercise_id: parseInt(value) }))}
+                value={formData.exercise_id ? String(formData.exercise_id) : undefined}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, exercise_id: value }))}
               >
                 <SelectTrigger id="set-exercise">
                   <SelectValue placeholder="Выберите упражнение" />

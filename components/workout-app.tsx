@@ -13,7 +13,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabId>('sets');
-  const { isLoading, isAuthenticated } = useApp();
+  const { isLoading, isAuthenticated, setSelectedCategoryId } = useApp();
+
+  const handleTabChange = (tab: TabId) => {
+    // Tab click should always bring user to the tab root page.
+    if (tab === 'categories') {
+      setSelectedCategoryId(null);
+    }
+    setActiveTab(tab);
+  };
 
   if (isLoading) {
     return (
@@ -48,7 +56,7 @@ function AppContent() {
       {/* Bottom Navigation */}
       <BottomNavigation 
         activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+        onTabChange={handleTabChange} 
       />
 
       {/* Toast Notifications */}

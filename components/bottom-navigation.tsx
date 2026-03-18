@@ -21,10 +21,8 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
   const { haptic } = useTelegram();
 
   const handleTabChange = (tab: TabId) => {
-    if (tab !== activeTab) {
-      haptic?.selectionChanged();
-      onTabChange(tab);
-    }
+    haptic?.selectionChanged();
+    onTabChange(tab);
   };
 
   return (

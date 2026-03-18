@@ -1,31 +1,33 @@
 // API Models
 
+export type EntityId = string | number;
+
 export interface Category {
-  id: number;
+  id: EntityId;
   title: string;
 }
 
 export interface Exercise {
-  id: number;
+  id: EntityId;
   title: string;
   short: string;
-  category: number | Category;
+  category: EntityId | Category;
   is_archived: boolean;
   created_at: string | number;
   updated_at: string | number;
 }
 
 export interface Template {
-  id: number;
+  id: EntityId;
   title: string;
   day_of_week: number | null;
-  exercises: number[] | Exercise[];
+  exercises: EntityId[] | Exercise[];
 }
 
 export interface WorkoutSet {
-  id: number;
-  exercise_id?: number;
-  exercise?: number | Exercise;
+  id: EntityId;
+  exercise_id?: EntityId;
+  exercise?: EntityId | Exercise;
   reps: number;
   weight: number;
   created_at: string | number;
@@ -39,17 +41,18 @@ export interface CategoryFormData {
 export interface ExerciseFormData {
   title: string;
   short: string;
-  category: number;
+  category?: EntityId;
+  category_id?: EntityId;
 }
 
 export interface TemplateFormData {
   title: string;
   day_of_week: number | null;
-  exercises: number[];
+  exercises: EntityId[];
 }
 
 export interface SetFormData {
-  exercise_id: number;
+  exercise_id: EntityId;
   reps: number;
   weight: number;
   created_at?: string;
@@ -57,7 +60,7 @@ export interface SetFormData {
 
 // Filter Types
 export interface SetFilters {
-  exercise_id?: number;
+  exercise_id?: EntityId;
   created_from?: string;
   created_to?: string;
 }

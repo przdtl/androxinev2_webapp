@@ -106,6 +106,8 @@ export function SetsScreen() {
     return count;
   }, [setFilters]);
 
+  const canCreateSet = activeExercises.length > 0;
+
   const getExerciseName = (set: WorkoutSet): string => {
     const exerciseId = set.exercise_id || (typeof set.exercise === 'number' ? set.exercise : (set.exercise as Exercise)?.id);
     if (!exerciseId) return 'Неизвестно';
@@ -321,12 +323,14 @@ export function SetsScreen() {
             <Empty.Description>
               {activeFiltersCount > 0 
                 ? 'Попробуйте изменить фильтры'
-                : 'Запишите свой первый подход'
+                : canCreateSet
+                  ? 'Запишите свой первый подход'
+                  : 'Сначала добавьте хотя бы одно упражнение'
               }
             </Empty.Description>
-            {activeFiltersCount === 0 && activeExercises.length > 0 && (
+            {activeFiltersCount === 0 && (
               <Empty.Actions>
-                <Button onClick={handleOpenCreate}>
+                <Button onClick={handleOpenCreate} disabled={!canCreateSet}>
                   <Plus className="size-4 mr-2" />
                   Добавить подход
                 </Button>

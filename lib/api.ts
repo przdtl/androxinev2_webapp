@@ -56,7 +56,14 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.detail || `HTTP ${response.status}`);
+      const errorObj = error as {
+        message?: string;
+        detail?: string;
+        error?: { message?: string };
+      };
+      throw new Error(
+        errorObj.error?.message || errorObj.message || errorObj.detail || `HTTP ${response.status}`,
+      );
     }
 
     // Handle 204 No Content
@@ -81,7 +88,7 @@ class ApiClient {
     return normalizeListResponse<Category>(res);
   }
 
-  async getCategory(id: number): Promise<Category> {
+  async getCategory(id: string | number): Promise<Category> {
     return this.request<Category>(`/categories/${id}/`);
   }
 
@@ -92,57 +99,65 @@ class ApiClient {
     });
   }
 
-  async updateCategory(id: number, data: CategoryFormData): Promise<Category> {
+  async updateCategory(id: string | number, data: CategoryFormData): Promise<Category> {
     return this.request<Category>(`/categories/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: string | number): Promise<void> {
     return this.request<void>(`/categories/${id}/`, {
       method: 'DELETE',
     });
   }
 
   // Exercises
-  async getExercises(categoryId?: number): Promise<Exercise[]> {
-    const params = categoryId ? `?category=${categoryId}` : '';
+  async getExercises(categoryId?: string | number): Promise<Exercise[]> {
+    const params = categoryId ? `?category_id=${encodeURIComponent(String(categoryId))}` : '';
     const res = await this.request<unknown>(`/exercises/${params}`);
     return normalizeListResponse<Exercise>(res);
   }
 
-  async getExercise(id: number): Promise<Exercise> {
+  async getExercise(id: string | number): Promise<Exercise> {
     return this.request<Exercise>(`/exercises/${id}/`);
   }
 
   async createExercise(data: ExerciseFormData): Promise<Exercise> {
+    const categoryId = data.category_id ?? data.category;
     return this.request<Exercise>('/exercises/', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        title: data.title,
+        short: data.short,
+        category_id: categoryId,
+      }),
     });
   }
 
-  async updateExercise(id: number, data: ExerciseFormData): Promise<Exercise> {
+  async updateExercise(id: string | number, data: ExerciseFormData): Promise<Exercise> {
     return this.request<Exercise>(`/exercises/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
+      method: 'PATCH',
+      body: JSON.stringify({
+        title: data.title,
+        short: data.short,
+      }),
     });
   }
 
-  async deleteExercise(id: number): Promise<void> {
+  async deleteExercise(id: string | number): Promise<void> {
     return this.request<void>(`/exercises/${id}/`, {
       method: 'DELETE',
     });
   }
 
-  async archiveExercise(id: number): Promise<Exercise> {
+  async archiveExercise(id: string | number): Promise<Exercise> {
     return this.request<Exercise>(`/exercises/${id}/archive/`, {
       method: 'POST',
     });
   }
 
-  async restoreExercise(id: number): Promise<Exercise> {
+  async restoreExercise(id: string | number): Promise<Exercise> {
     return this.request<Exercise>(`/exercises/${id}/restore/`, {
       method: 'POST',
     });
@@ -154,7 +169,7 @@ class ApiClient {
     return normalizeListResponse<Template>(res);
   }
 
-  async getTemplate(id: number): Promise<Template> {
+  async getTemplate(id: string | number): Promise<Template> {
     return this.request<Template>(`/templates/${id}/`);
   }
 
@@ -165,14 +180,14 @@ class ApiClient {
     });
   }
 
-  async updateTemplate(id: number, data: TemplateFormData): Promise<Template> {
+  async updateTemplate(id: string | number, data: TemplateFormData): Promise<Template> {
     return this.request<Template>(`/templates/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteTemplate(id: number): Promise<void> {
+  async deleteTemplate(id: string | number): Promise<void> {
     return this.request<void>(`/templates/${id}/`, {
       method: 'DELETE',
     });
@@ -195,7 +210,7 @@ class ApiClient {
     return normalizeListResponse<WorkoutSet>(res);
   }
 
-  async getSet(id: number): Promise<WorkoutSet> {
+  async getSet(id: string | number): Promise<WorkoutSet> {
     return this.request<WorkoutSet>(`/sets/${id}/`);
   }
 
@@ -206,14 +221,14 @@ class ApiClient {
     });
   }
 
-  async updateSet(id: number, data: Partial<SetFormData>): Promise<WorkoutSet> {
+  async updateSet(id: string | number, data: Partial<SetFormData>): Promise<WorkoutSet> {
     return this.request<WorkoutSet>(`/sets/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteSet(id: number): Promise<void> {
+  async deleteSet(id: string | number): Promise<void> {
     return this.request<void>(`/sets/${id}/`, {
       method: 'DELETE',
     });

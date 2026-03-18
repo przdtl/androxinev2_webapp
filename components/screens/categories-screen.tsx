@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, ChevronRight, MoreVertical, Pencil, Trash2, FolderOpen } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
-import type { Category, CategoryFormData } from '@/lib/types';
+import type { Category, CategoryFormData, EntityId } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -128,7 +128,7 @@ export function CategoriesScreen() {
     }
   };
 
-  const handleSelectCategory = (categoryId: number) => {
+  const handleSelectCategory = (categoryId: EntityId) => {
     setSelectedCategoryId(categoryId);
     haptic?.impactOccurred('light');
   };

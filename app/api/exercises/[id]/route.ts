@@ -17,7 +17,7 @@ export async function GET(
   return NextResponse.json(exercise);
 }
 
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -30,9 +30,9 @@ export async function PUT(
     }
     const updatedExercise: Exercise = {
       ...exercises[index],
-      title: body.title,
+      title: body.title || exercises[index].title,
       short: body.short || exercises[index].short,
-      category: body.category || exercises[index].category,
+      category: body.category_id ?? body.category ?? exercises[index].category,
       updated_at: new Date().toISOString(),
     };
     exercises[index] = updatedExercise;
@@ -40,6 +40,14 @@ export async function PUT(
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
+}
+
+// Backward compatibility for older clients.
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return PATCH(request, context);
 }
 
 export async function DELETE(

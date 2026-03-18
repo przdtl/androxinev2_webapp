@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, MoreVertical, Pencil, Trash2, Archive, ArchiveRestore, Dumbbell, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
-import type { Exercise, ExerciseFormData } from '@/lib/types';
+import type { Exercise, ExerciseFormData, EntityId } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,7 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface ExercisesScreenProps {
-  categoryId: number;
+  categoryId: EntityId;
   categoryTitle: string;
 }
 
@@ -62,7 +62,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   const [formData, setFormData] = useState<ExerciseFormData>({ 
     title: '', 
     short: '',
-    category: categoryId,
+    category_id: categoryId,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +76,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   const filteredExercises = useMemo(() => {
     return exercises.filter(e => {
       const catId = typeof e.category === 'object' ? e.category.id : e.category;
-      const matchesCategory = catId === categoryId;
+      const matchesCategory = String(catId) === String(categoryId);
       const matchesArchiveFilter = showArchived ? e.is_archived : !e.is_archived;
       return matchesCategory && matchesArchiveFilter;
     });
@@ -85,13 +85,13 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   const archivedCount = useMemo(() => {
     return exercises.filter(e => {
       const catId = typeof e.category === 'object' ? e.category.id : e.category;
-      return catId === categoryId && e.is_archived;
+      return String(catId) === String(categoryId) && e.is_archived;
     }).length;
   }, [exercises, categoryId]);
 
   const handleOpenCreate = () => {
     setEditingExercise(null);
-    setFormData({ title: '', short: '', category: categoryId });
+    setFormData({ title: '', short: '', category_id: categoryId });
     setIsDialogOpen(true);
     haptic?.impactOccurred('light');
   };
@@ -102,7 +102,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
     setFormData({ 
       title: exercise.title, 
       short: exercise.short,
-      category: catId,
+      category_id: catId,
     });
     setIsDialogOpen(true);
     haptic?.impactOccurred('light');
@@ -147,7 +147,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
         haptic?.notificationOccurred('success');
       }
       setIsDialogOpen(false);
-      setFormData({ title: '', short: '', category: categoryId });
+      setFormData({ title: '', short: '', category_id: categoryId });
     } catch (error) {
       console.error('Failed to save exercise:', error);
       haptic?.notificationOccurred('error');

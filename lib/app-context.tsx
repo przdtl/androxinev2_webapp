@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import api from './api';
 import type {
   Category,
+  EntityId,
   Exercise,
   Template,
   WorkoutSet,
@@ -32,44 +33,44 @@ interface AppState {
   setFilters: SetFilters;
   
   // Selected items
-  selectedCategoryId: number | null;
+  selectedCategoryId: EntityId | null;
 }
 
 interface AppContextType extends AppState {
   // Categories
   loadCategories: () => Promise<void>;
   createCategory: (data: CategoryFormData) => Promise<Category>;
-  updateCategory: (id: number, data: CategoryFormData) => Promise<Category>;
-  deleteCategory: (id: number) => Promise<void>;
+  updateCategory: (id: EntityId, data: CategoryFormData) => Promise<Category>;
+  deleteCategory: (id: EntityId) => Promise<void>;
   
   // Exercises
-  loadExercises: (categoryId?: number) => Promise<void>;
+  loadExercises: (categoryId?: EntityId) => Promise<void>;
   createExercise: (data: ExerciseFormData) => Promise<Exercise>;
-  updateExercise: (id: number, data: ExerciseFormData) => Promise<Exercise>;
-  deleteExercise: (id: number) => Promise<void>;
-  archiveExercise: (id: number) => Promise<Exercise>;
-  restoreExercise: (id: number) => Promise<Exercise>;
+  updateExercise: (id: EntityId, data: ExerciseFormData) => Promise<Exercise>;
+  deleteExercise: (id: EntityId) => Promise<void>;
+  archiveExercise: (id: EntityId) => Promise<Exercise>;
+  restoreExercise: (id: EntityId) => Promise<Exercise>;
   
   // Templates
   loadTemplates: () => Promise<void>;
   createTemplate: (data: TemplateFormData) => Promise<Template>;
-  updateTemplate: (id: number, data: TemplateFormData) => Promise<Template>;
-  deleteTemplate: (id: number) => Promise<void>;
+  updateTemplate: (id: EntityId, data: TemplateFormData) => Promise<Template>;
+  deleteTemplate: (id: EntityId) => Promise<void>;
   
   // Sets
   loadSets: (filters?: SetFilters) => Promise<void>;
   createSet: (data: SetFormData) => Promise<WorkoutSet>;
-  updateSet: (id: number, data: Partial<SetFormData>) => Promise<WorkoutSet>;
-  deleteSet: (id: number) => Promise<void>;
+  updateSet: (id: EntityId, data: Partial<SetFormData>) => Promise<WorkoutSet>;
+  deleteSet: (id: EntityId) => Promise<void>;
   setSetFilters: (filters: SetFilters) => void;
   groupedSets: GroupedSets[];
   
   // Selection
-  setSelectedCategoryId: (id: number | null) => void;
+  setSelectedCategoryId: (id: EntityId | null) => void;
   
   // Helpers
-  getExerciseById: (id: number) => Exercise | undefined;
-  getCategoryById: (id: number) => Category | undefined;
+  getExerciseById: (id: EntityId) => Exercise | undefined;
+  getCategoryById: (id: EntityId) => Category | undefined;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -133,7 +134,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return category;
   }, []);
 
-  const updateCategory = useCallback(async (id: number, data: CategoryFormData) => {
+  const updateCategory = useCallback(async (id: EntityId, data: CategoryFormData) => {
     const category = await api.updateCategory(id, data);
     setState(prev => ({
       ...prev,
@@ -142,7 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return category;
   }, []);
 
-  const deleteCategory = useCallback(async (id: number) => {
+  const deleteCategory = useCallback(async (id: EntityId) => {
     await api.deleteCategory(id);
     setState(prev => ({
       ...prev,
@@ -151,7 +152,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Exercises
-  const loadExercises = useCallback(async (categoryId?: number) => {
+  const loadExercises = useCallback(async (categoryId?: EntityId) => {
     if (!state.isAuthenticated) return;
     try {
       const exercises = await api.getExercises(categoryId);
@@ -170,7 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return exercise;
   }, []);
 
-  const updateExercise = useCallback(async (id: number, data: ExerciseFormData) => {
+  const updateExercise = useCallback(async (id: EntityId, data: ExerciseFormData) => {
     const exercise = await api.updateExercise(id, data);
     setState(prev => ({
       ...prev,
@@ -179,7 +180,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return exercise;
   }, []);
 
-  const deleteExercise = useCallback(async (id: number) => {
+  const deleteExercise = useCallback(async (id: EntityId) => {
     await api.deleteExercise(id);
     setState(prev => ({
       ...prev,
@@ -187,7 +188,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const archiveExercise = useCallback(async (id: number) => {
+  const archiveExercise = useCallback(async (id: EntityId) => {
     const exercise = await api.archiveExercise(id);
     setState(prev => ({
       ...prev,
@@ -196,7 +197,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return exercise;
   }, []);
 
-  const restoreExercise = useCallback(async (id: number) => {
+  const restoreExercise = useCallback(async (id: EntityId) => {
     const exercise = await api.restoreExercise(id);
     setState(prev => ({
       ...prev,
@@ -225,7 +226,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return template;
   }, []);
 
-  const updateTemplate = useCallback(async (id: number, data: TemplateFormData) => {
+  const updateTemplate = useCallback(async (id: EntityId, data: TemplateFormData) => {
     const template = await api.updateTemplate(id, data);
     setState(prev => ({
       ...prev,
@@ -234,7 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return template;
   }, []);
 
-  const deleteTemplate = useCallback(async (id: number) => {
+  const deleteTemplate = useCallback(async (id: EntityId) => {
     await api.deleteTemplate(id);
     setState(prev => ({
       ...prev,
@@ -262,7 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return set;
   }, []);
 
-  const updateSet = useCallback(async (id: number, data: Partial<SetFormData>) => {
+  const updateSet = useCallback(async (id: EntityId, data: Partial<SetFormData>) => {
     const set = await api.updateSet(id, data);
     setState(prev => ({
       ...prev,
@@ -271,7 +272,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return set;
   }, []);
 
-  const deleteSet = useCallback(async (id: number) => {
+  const deleteSet = useCallback(async (id: EntityId) => {
     await api.deleteSet(id);
     setState(prev => ({
       ...prev,
@@ -308,16 +309,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.sets]);
 
   // Selection
-  const setSelectedCategoryId = useCallback((id: number | null) => {
+  const setSelectedCategoryId = useCallback((id: EntityId | null) => {
     setState(prev => ({ ...prev, selectedCategoryId: id }));
   }, []);
 
   // Helpers
-  const getExerciseById = useCallback((id: number) => {
+  const getExerciseById = useCallback((id: EntityId) => {
     return state.exercises.find(e => e.id === id);
   }, [state.exercises]);
 
-  const getCategoryById = useCallback((id: number) => {
+  const getCategoryById = useCallback((id: EntityId) => {
     return state.categories.find(c => c.id === id);
   }, [state.categories]);
 

@@ -8,13 +8,13 @@ let nextId = Math.max(...exercises.map(e => e.id)) + 1;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const categoryId = searchParams.get('category');
+  const categoryId = searchParams.get('category_id') || searchParams.get('category');
   
   let result = exercises;
   if (categoryId) {
     result = exercises.filter(e => {
       const catId = typeof e.category === 'object' ? e.category : e.category;
-      return catId === parseInt(categoryId);
+      return String(catId) === String(categoryId);
     });
   }
   
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       id: nextId++,
       title: body.title,
       short: body.short || '',
-      category: body.category,
+      category: body.category_id ?? body.category,
       is_archived: false,
       created_at: now,
       updated_at: now,

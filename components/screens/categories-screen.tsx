@@ -153,14 +153,14 @@ export function CategoriesScreen() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0a0e27] to-[#151d3a]">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#151d3a]/50 bg-gradient-to-b from-[#151d3a] to-[#0a0e27]">
-        <h1 className="text-xl font-semibold text-white">Категории</h1>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <h1 className="text-xl font-semibold text-foreground">Категории</h1>
         <Button 
           size="sm" 
           onClick={handleOpenCreate}
-          className="gap-1.5 bg-gradient-to-b from-[#ff6b35] to-[#ff8c5a] hover:from-[#ff8c5a] hover:to-[#ff6b35]"
+          className="gap-1.5"
         >
           <Plus className="size-4" />
           Добавить
@@ -172,34 +172,34 @@ export function CategoriesScreen() {
         {categories.length === 0 ? (
           <Empty className="mt-16">
             <Empty.Icon>
-              <FolderOpen className="size-10 text-[#ff6b35]" />
+              <FolderOpen className="size-10" />
             </Empty.Icon>
-            <Empty.Title className="text-white">Нет категорий</Empty.Title>
-            <Empty.Description className="text-white/60">
+            <Empty.Title>Нет категорий</Empty.Title>
+            <Empty.Description>
               Создайте первую категорию для группировки упражнений
             </Empty.Description>
             <Empty.Actions>
-              <Button onClick={handleOpenCreate} className="bg-gradient-to-b from-[#ff6b35] to-[#ff8c5a]">
+              <Button onClick={handleOpenCreate}>
                 <Plus className="size-4 mr-2" />
                 Создать категорию
               </Button>
             </Empty.Actions>
           </Empty>
         ) : (
-          <ul className="divide-y divide-[#151d3a]/30 px-2 py-2">
+          <ul className="divide-y divide-border">
             {categories.map((category) => (
-              <li key={category.id} className="rounded-lg overflow-hidden mb-2">
-                <div className="flex items-center bg-gradient-to-r from-[#151d3a]/60 to-[#0f1628]/40 hover:from-[#151d3a]/80 hover:to-[#0f1628]/60 border border-[#151d3a]/30 hover:border-[#ff6b35]/20 transition-all touch-feedback">
+              <li key={category.id}>
+                <div className="flex items-center bg-card hover:bg-muted/50 transition-colors touch-feedback">
                   <button
                     onClick={() => handleSelectCategory(category.id)}
                     className="flex-1 flex items-center justify-between px-4 py-3.5 text-left"
                   >
-                    <span className="font-medium text-white">{category.title}</span>
-                    <ChevronRight className="size-5 text-[#ff6b35]/60" />
+                    <span className="font-medium text-foreground">{category.title}</span>
+                    <ChevronRight className="size-5 text-muted-foreground" />
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="mr-2 text-white/60 hover:text-[#ff6b35]">
+                      <Button variant="ghost" size="icon" className="mr-2">
                         <MoreVertical className="size-5" />
                         <span className="sr-only">Меню</span>
                       </Button>
@@ -227,15 +227,15 @@ export function CategoriesScreen() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] bg-[#151d3a] border-[#151d3a]/50">
+        <DialogContent className="max-w-[calc(100%-2rem)]">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle>
               {editingCategory ? 'Редактировать категорию' : 'Новая категория'}
             </DialogTitle>
           </DialogHeader>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="category-title" className="text-white/80">Название</FieldLabel>
+              <FieldLabel htmlFor="category-title">Название</FieldLabel>
               <Input
                 id="category-title"
                 value={formData.title}
@@ -246,10 +246,10 @@ export function CategoriesScreen() {
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-[#151d3a]/50 text-white">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting || !formData.title.trim()} className="bg-gradient-to-b from-[#ff6b35] to-[#ff8c5a]">
+            <Button onClick={handleSubmit} disabled={isSubmitting || !formData.title.trim()}>
               {isSubmitting ? <Spinner className="size-4 mr-2" /> : null}
               {editingCategory ? 'Сохранить' : 'Создать'}
             </Button>

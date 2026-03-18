@@ -37,13 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel, FieldGroup } from '@/components/ui/field';
 import { Empty } from '@/components/ui/empty';
@@ -68,7 +61,7 @@ export function SetsScreen() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [editingSet, setEditingSet] = useState<WorkoutSet | null>(null);
   const [deletingSet, setDeletingSet] = useState<WorkoutSet | null>(null);
   const [formData, setFormData] = useState<SetFormData>({ 
@@ -112,7 +105,7 @@ export function SetsScreen() {
     const exerciseId = set.exercise_id || (typeof set.exercise === 'number' ? set.exercise : (set.exercise as Exercise)?.id);
     if (!exerciseId) return 'Неизвестно';
     const exercise = getExerciseById(exerciseId);
-    return exercise?.short || exercise?.title || `Упражнение #${exerciseId}`;
+    return exercise?.title || exercise?.short || `Упражнение #${exerciseId}`;
   };
 
   const handleOpenCreate = () => {
@@ -162,7 +155,7 @@ export function SetsScreen() {
       created_from: localFilters.created_from || undefined,
       created_to: localFilters.created_to || undefined,
     });
-    setIsFilterSheetOpen(false);
+    setIsFilterDialogOpen(false);
     haptic?.notificationOccurred('success');
   };
 
@@ -170,7 +163,7 @@ export function SetsScreen() {
     setLocalFilters({ exercise_id: 'all', created_from: '', created_to: '' });
     setSetFilters({});
     loadSets({});
-    setIsFilterSheetOpen(false);
+    setIsFilterDialogOpen(false);
     haptic?.impactOccurred('light');
   };
 
@@ -235,77 +228,19 @@ export function SetsScreen() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
         <h1 className="text-xl font-semibold text-foreground">Подходы</h1>
         <div className="flex items-center gap-2">
-          <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-            <SheetTrigger asChild>
-              <Button 
-                size="sm" 
-                variant={activeFiltersCount > 0 ? 'secondary' : 'ghost'}
-                className="gap-1.5"
-              >
-                <Filter className="size-4" />
-                {activeFiltersCount > 0 && (
-                  <Badge variant="default" className="h-5 px-1.5 text-xs">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-auto max-h-[70vh]">
-              <SheetHeader>
-                <SheetTitle>Фильтры</SheetTitle>
-              </SheetHeader>
-              <div className="py-4">
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="filter-exercise">Упражнение</FieldLabel>
-                    <Select
-                      value={localFilters.exercise_id}
-                      onValueChange={(value) => setLocalFilters(prev => ({ ...prev, exercise_id: value }))}
-                    >
-                      <SelectTrigger id="filter-exercise">
-                        <SelectValue placeholder="Все упражнения" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Все упражнения</SelectItem>
-                        {exercises.map(exercise => (
-                          <SelectItem key={exercise.id} value={exercise.id.toString()}>
-                            {exercise.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="filter-from">Дата от</FieldLabel>
-                    <Input
-                      id="filter-from"
-                      type="date"
-                      value={localFilters.created_from}
-                      onChange={(e) => setLocalFilters(prev => ({ ...prev, created_from: e.target.value }))}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="filter-to">Дата до</FieldLabel>
-                    <Input
-                      id="filter-to"
-                      type="date"
-                      value={localFilters.created_to}
-                      onChange={(e) => setLocalFilters(prev => ({ ...prev, created_to: e.target.value }))}
-                    />
-                  </Field>
-                </FieldGroup>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={handleClearFilters}>
-                  <X className="size-4 mr-2" />
-                  Сбросить
-                </Button>
-                <Button className="flex-1" onClick={handleApplyFilters}>
-                  Применить
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <Button
+            size="sm"
+            variant={activeFiltersCount > 0 ? 'secondary' : 'ghost'}
+            className="gap-1.5"
+            onClick={() => setIsFilterDialogOpen(true)}
+          >
+            <Filter className="size-4" />
+            {activeFiltersCount > 0 && (
+              <Badge variant="default" className="h-5 px-1.5 text-xs">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
           <Button 
             size="sm" 
             onClick={handleOpenCreate}
@@ -484,6 +419,61 @@ export function SetsScreen() {
               {isSubmitting ? <Spinner className="size-4 mr-2" /> : null}
               {editingSet ? 'Сохранить' : 'Создать'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Filters Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="max-w-[calc(100%-2rem)]">
+          <DialogHeader>
+            <DialogTitle>Фильтры</DialogTitle>
+          </DialogHeader>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="filter-exercise">Упражнение</FieldLabel>
+              <Select
+                value={localFilters.exercise_id}
+                onValueChange={(value) => setLocalFilters(prev => ({ ...prev, exercise_id: value }))}
+              >
+                <SelectTrigger id="filter-exercise">
+                  <SelectValue placeholder="Все упражнения" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все упражнения</SelectItem>
+                  {exercises.map(exercise => (
+                    <SelectItem key={exercise.id} value={exercise.id.toString()}>
+                      {exercise.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="filter-from">Дата от</FieldLabel>
+              <Input
+                id="filter-from"
+                type="date"
+                value={localFilters.created_from}
+                onChange={(e) => setLocalFilters(prev => ({ ...prev, created_from: e.target.value }))}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="filter-to">Дата до</FieldLabel>
+              <Input
+                id="filter-to"
+                type="date"
+                value={localFilters.created_to}
+                onChange={(e) => setLocalFilters(prev => ({ ...prev, created_to: e.target.value }))}
+              />
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClearFilters}>
+              <X className="size-4 mr-2" />
+              Сбросить
+            </Button>
+            <Button onClick={handleApplyFilters}>Применить</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

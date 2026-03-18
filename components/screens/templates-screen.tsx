@@ -80,7 +80,10 @@ export function TemplatesScreen() {
   }, [exercises]);
 
   const getExerciseIds = (template: Template): number[] => {
-    return template.exercises.map(e => typeof e === 'object' ? (e as Exercise).id : e);
+    if (!Array.isArray(template.exercises)) return [];
+    return template.exercises
+      .map(e => (typeof e === 'object' ? (e as Exercise).id : e))
+      .filter((id): id is number => typeof id === 'number' && Number.isFinite(id));
   };
 
   const getExerciseNames = (template: Template): string[] => {

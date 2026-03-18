@@ -13,6 +13,18 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+function normalizeListResponse<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[];
+  if (!payload || typeof payload !== 'object') return [];
+
+  const obj = payload as Record<string, unknown>;
+  if (Array.isArray(obj.items)) return obj.items as T[];
+  if (Array.isArray(obj.results)) return obj.results as T[];
+  if (Array.isArray(obj.data)) return obj.data as T[];
+
+  return [];
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -65,7 +77,8 @@ class ApiClient {
 
   // Categories
   async getCategories(): Promise<Category[]> {
-    return this.request<Category[]>('/categories/');
+    const res = await this.request<unknown>('/categories/');
+    return normalizeListResponse<Category>(res);
   }
 
   async getCategory(id: number): Promise<Category> {
@@ -95,7 +108,8 @@ class ApiClient {
   // Exercises
   async getExercises(categoryId?: number): Promise<Exercise[]> {
     const params = categoryId ? `?category=${categoryId}` : '';
-    return this.request<Exercise[]>(`/exercises/${params}`);
+    const res = await this.request<unknown>(`/exercises/${params}`);
+    return normalizeListResponse<Exercise>(res);
   }
 
   async getExercise(id: number): Promise<Exercise> {
@@ -136,7 +150,8 @@ class ApiClient {
 
   // Templates
   async getTemplates(): Promise<Template[]> {
-    return this.request<Template[]>('/templates/');
+    const res = await this.request<unknown>('/templates/');
+    return normalizeListResponse<Template>(res);
   }
 
   async getTemplate(id: number): Promise<Template> {
@@ -176,7 +191,8 @@ class ApiClient {
       params.append('created_to', filters.created_to);
     }
     const queryString = params.toString();
-    return this.request<WorkoutSet[]>(`/sets/${queryString ? `?${queryString}` : ''}`);
+    const res = await this.request<unknown>(`/sets/${queryString ? `?${queryString}` : ''}`);
+    return normalizeListResponse<WorkoutSet>(res);
   }
 
   async getSet(id: number): Promise<WorkoutSet> {

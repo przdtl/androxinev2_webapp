@@ -118,7 +118,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!state.isAuthenticated) return;
     try {
       const categories = await api.getCategories();
-      setState(prev => ({ ...prev, categories }));
+      setState(prev => ({
+        ...prev,
+        categories: Array.isArray(categories) ? categories : [],
+      }));
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -152,7 +155,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!state.isAuthenticated) return;
     try {
       const exercises = await api.getExercises(categoryId);
-      setState(prev => ({ ...prev, exercises }));
+      setState(prev => ({
+        ...prev,
+        exercises: Array.isArray(exercises) ? exercises : [],
+      }));
     } catch (error) {
       console.error('Failed to load exercises:', error);
     }
@@ -204,7 +210,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!state.isAuthenticated) return;
     try {
       const templates = await api.getTemplates();
-      setState(prev => ({ ...prev, templates }));
+      setState(prev => ({
+        ...prev,
+        templates: Array.isArray(templates) ? templates : [],
+      }));
     } catch (error) {
       console.error('Failed to load templates:', error);
     }
@@ -238,11 +247,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!state.isAuthenticated) return;
     try {
       const sets = await api.getSets(filters || state.setFilters);
-      setState(prev => ({ ...prev, sets }));
+      setState(prev => ({
+        ...prev,
+        sets: Array.isArray(sets) ? sets : [],
+      }));
     } catch (error) {
       console.error('Failed to load sets:', error);
     }
-  }, [state.setFilters]);
+  }, [state.isAuthenticated, state.setFilters]);
 
   const createSet = useCallback(async (data: SetFormData) => {
     const set = await api.createSet(data);

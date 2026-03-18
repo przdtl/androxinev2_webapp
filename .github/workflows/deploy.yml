@@ -54,11 +54,10 @@ jobs:
 
             # Для pnpm-проектов используем lockfile, иначе fallback на npm
             if [ -f "pnpm-lock.yaml" ]; then
-              corepack enable
-              pnpm --version
-              pnpm install --frozen-lockfile
-              pnpm build
-              pnpm prune --prod
+              npx -y pnpm@9 --version
+              npx -y pnpm@9 install --frozen-lockfile
+              npx -y pnpm@9 build
+              npx -y pnpm@9 prune --prod
             elif [ -f "package-lock.json" ]; then
               npm ci
               npm run build

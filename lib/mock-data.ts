@@ -25,9 +25,24 @@ export const mockExercises: Exercise[] = [
 ];
 
 export const mockTemplates: Template[] = [
-  { id: 1, title: 'День груди', day_of_week: 0, exercises: [1, 2, 3] },
-  { id: 2, title: 'День спины', day_of_week: 2, exercises: [4, 5, 6] },
-  { id: 3, title: 'День ног', day_of_week: 4, exercises: [7, 8] },
+  {
+    id: 1,
+    title: 'День груди',
+    day_of_week: 0,
+    exercises: [{ exercise_id: 1 }, { exercise_id: 2 }, { exercise_id: 3 }],
+  },
+  {
+    id: 2,
+    title: 'День спины',
+    day_of_week: 2,
+    exercises: [{ exercise_id: 4 }, { exercise_id: 5 }, { exercise_id: 6 }],
+  },
+  {
+    id: 3,
+    title: 'День ног',
+    day_of_week: 4,
+    exercises: [{ exercise_id: 7 }, { exercise_id: 8 }],
+  },
 ];
 
 const now = new Date();

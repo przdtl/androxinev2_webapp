@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, MoreVertical, Pencil, Trash2, Calendar, ListChecks } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
-import type { Template, TemplateFormData, Exercise } from '@/lib/types';
+import type { Template, TemplateFormData, EntityId } from '@/lib/types';
 import { DAYS_OF_WEEK, getDayLabel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -79,17 +79,20 @@ export function TemplatesScreen() {
     return exercises.filter(e => !e.is_archived);
   }, [exercises]);
 
-  const getExerciseIds = (template: Template): number[] => {
+  const getExerciseIds = (template: Template): EntityId[] => {
     if (!Array.isArray(template.exercises)) return [];
+
     return template.exercises
-      .map(e => (typeof e === 'object' ? (e as Exercise).id : e))
-      .filter((id): id is number => typeof id === 'number' && Number.isFinite(id));
+      .map((item) => item.exercise?.id ?? item.exercise_id)
+      .filter((id): id is EntityId => id !== undefined && id !== null);
   };
+
+  const idsEqual = (a: EntityId, b: EntityId): boolean => String(a) === String(b);
 
   const getExerciseNames = (template: Template): string[] => {
     const ids = getExerciseIds(template);
     return ids.map(id => {
-      const exercise = exercises.find(e => e.id === id);
+      const exercise = exercises.find(e => idsEqual(e.id, id));
       return exercise?.title || `Упражнение #${id}`;
     });
   };
@@ -118,11 +121,11 @@ export function TemplatesScreen() {
     haptic?.impactOccurred('medium');
   };
 
-  const handleToggleExercise = (exerciseId: number) => {
+  const handleToggleExercise = (exerciseId: EntityId) => {
     setFormData(prev => ({
       ...prev,
-      exercises: prev.exercises.includes(exerciseId)
-        ? prev.exercises.filter(id => id !== exerciseId)
+      exercises: prev.exercises.some(id => idsEqual(id, exerciseId))
+        ? prev.exercises.filter(id => !idsEqual(id, exerciseId))
         : [...prev.exercises, exerciseId],
     }));
     haptic?.selectionChanged();
@@ -314,7 +317,7 @@ export function TemplatesScreen() {
                           className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
                         >
                           <Checkbox
-                            checked={formData.exercises.includes(exercise.id)}
+                            checked={formData.exercises.some(id => idsEqual(id, exercise.id))}
                             onCheckedChange={() => handleToggleExercise(exercise.id)}
                           />
                           <span className="text-sm">{exercise.title}</span>

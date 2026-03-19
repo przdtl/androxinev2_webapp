@@ -2,6 +2,8 @@ import type {
   Category,
   Exercise,
   Template,
+  TemplateExercise,
+  TemplateExerciseCreateInput,
   WorkoutSet,
   CategoryFormData,
   ExerciseFormData,
@@ -23,6 +25,65 @@ function normalizeListResponse<T>(payload: unknown): T[] {
   if (Array.isArray(obj.data)) return obj.data as T[];
 
   return [];
+}
+
+function mapTemplateExercise(raw: unknown): TemplateExercise | null {
+  if (raw === null || raw === undefined) return null;
+
+  if (typeof raw === 'string' || typeof raw === 'number') {
+    return { exercise_id: raw };
+  }
+
+  if (typeof raw !== 'object') return null;
+
+  const obj = raw as Record<string, unknown>;
+  const nestedExercise = obj.exercise;
+
+  let exercise: Exercise | undefined;
+  if (nestedExercise && typeof nestedExercise === 'object') {
+    exercise = nestedExercise as Exercise;
+  }
+
+  const exerciseId =
+    obj.exercise_id ??
+    (exercise ? exercise.id : undefined) ??
+    (typeof obj.id === 'string' || typeof obj.id === 'number' ? obj.id : undefined);
+
+  return {
+    id: typeof obj.id === 'string' || typeof obj.id === 'number' ? obj.id : undefined,
+    exercise_id: typeof exerciseId === 'string' || typeof exerciseId === 'number' ? exerciseId : undefined,
+    exercise,
+    default_weight:
+      typeof obj.default_weight === 'number' || obj.default_weight === null
+        ? (obj.default_weight as number | null)
+        : undefined,
+    default_reps:
+      typeof obj.default_reps === 'number' || obj.default_reps === null
+        ? (obj.default_reps as number | null)
+        : undefined,
+    order: typeof obj.order === 'number' ? obj.order : undefined,
+  };
+}
+
+function mapTemplate(raw: unknown): Template {
+  const obj = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const exercisesRaw = Array.isArray(obj.exercises) ? obj.exercises : [];
+
+  return {
+    ...(obj as Omit<Template, 'exercises'>),
+    exercises: exercisesRaw
+      .map(mapTemplateExercise)
+      .filter((item): item is TemplateExercise => item !== null),
+  } as Template;
+}
+
+function toTemplateExerciseCreateInput(exerciseId: string | number, order: number): TemplateExerciseCreateInput {
+  return {
+    exercise_id: exerciseId,
+    order,
+    default_reps: null,
+    default_weight: null,
+  };
 }
 
 class ApiClient {
@@ -166,25 +227,42 @@ class ApiClient {
   // Templates
   async getTemplates(): Promise<Template[]> {
     const res = await this.request<unknown>('/templates/');
-    return normalizeListResponse<Template>(res);
+    return normalizeListResponse<unknown>(res).map(mapTemplate);
   }
 
   async getTemplate(id: string | number): Promise<Template> {
-    return this.request<Template>(`/templates/${id}/`);
+    const template = await this.request<unknown>(`/templates/${id}/`);
+    return mapTemplate(template);
   }
 
   async createTemplate(data: TemplateFormData): Promise<Template> {
-    return this.request<Template>('/templates/', {
+    const payload = {
+      title: data.title,
+      day_of_week: data.day_of_week,
+      exercises: data.exercises.map((exerciseId, index) =>
+        toTemplateExerciseCreateInput(exerciseId, index + 1),
+      ),
+    };
+
+    const template = await this.request<unknown>('/templates/', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
+    return mapTemplate(template);
   }
 
   async updateTemplate(id: string | number, data: TemplateFormData): Promise<Template> {
-    return this.request<Template>(`/templates/${id}/`, {
+    // Update schema accepts title/day_of_week; keep exercises handling in create payload.
+    const payload = {
+      title: data.title,
+      day_of_week: data.day_of_week,
+    };
+
+    const template = await this.request<unknown>(`/templates/${id}/`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
+    return mapTemplate(template);
   }
 
   async deleteTemplate(id: string | number): Promise<void> {

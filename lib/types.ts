@@ -21,7 +21,23 @@ export interface Template {
   id: EntityId;
   title: string;
   day_of_week: number | null;
-  exercises: EntityId[] | Exercise[];
+  exercises: TemplateExercise[];
+}
+
+export interface TemplateExercise {
+  id?: EntityId;
+  exercise_id?: EntityId;
+  exercise?: Exercise;
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number;
+}
+
+export interface TemplateExerciseCreateInput {
+  exercise_id: EntityId;
+  default_weight?: number | null;
+  default_reps?: number | null;
+  order?: number;
 }
 
 export interface WorkoutSet {

@@ -194,13 +194,13 @@ export function CategoriesScreen({ onOpenExercise }: CategoriesScreenProps) {
           <ul className="divide-y divide-border">
             {categories.map((category) => (
               <li key={category.id}>
-                <div className="flex items-center bg-card hover:bg-muted/50 transition-colors touch-feedback">
+                <div className="flex min-w-0 items-center bg-card hover:bg-muted/50 transition-colors touch-feedback">
                   <button
                     onClick={() => handleSelectCategory(category.id)}
-                    className="flex-1 flex items-center justify-between px-4 py-3.5 text-left"
+                    className="flex-1 min-w-0 flex items-center justify-between px-4 py-3.5 text-left"
                   >
-                    <span className="font-medium text-foreground">{category.title}</span>
-                    <ChevronRight className="size-5 text-muted-foreground" />
+                    <span className="min-w-0 truncate font-medium text-foreground">{category.title}</span>
+                    <ChevronRight className="shrink-0 size-5 text-muted-foreground" />
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

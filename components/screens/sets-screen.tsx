@@ -43,18 +43,19 @@ interface SetsScreenProps {
 }
 
 export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreenProps) {
-  const { 
-    sets,
+  const {
     exercises,
     groupedSets,
-    loadSets, 
+    loadSets,
     loadExercises,
-    createSet, 
-    updateSet, 
+    loadCategories,
+    createSet,
+    updateSet,
     deleteSet,
     setFilters,
     setSetFilters,
     getExerciseById,
+    getCategoryById,
   } = useApp();
   const { haptic } = useTelegram();
 
@@ -86,9 +87,8 @@ export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreen
   });
 
   useEffect(() => {
-    Promise.all([loadSets(), loadExercises()])
-      .finally(() => setIsLoading(false));
-  }, [loadSets, loadExercises]);
+    Promise.all([loadSets(), loadExercises(), loadCategories()]).finally(() => setIsLoading(false));
+  }, [loadSets, loadExercises, loadCategories]);
 
   // Active exercises only
   const activeExercises = useMemo(() => {
@@ -128,6 +128,40 @@ export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreen
     if (!exerciseId) return 'Неизвестно';
     const exercise = getExerciseById(exerciseId);
     return exercise?.title || exercise?.short || `Упражнение #${exerciseId}`;
+  };
+
+  const abbreviateLabel = (label: string, maxLength = 18): string => {
+    const trimmed = label.trim();
+    if (trimmed.length <= maxLength) return trimmed;
+    return `${trimmed.slice(0, maxLength - 1)}…`;
+  };
+
+  const getSetCategoryName = (set: WorkoutSet): string | null => {
+    const exerciseFromSet =
+      typeof set.exercise === 'object' && set.exercise !== null
+        ? (set.exercise as Exercise)
+        : undefined;
+
+    const resolvedExercise =
+      exerciseFromSet ??
+      (() => {
+        const exerciseId = resolveSetExerciseId(set);
+        if (!exerciseId) return undefined;
+        return getExerciseById(exerciseId);
+      })();
+
+    if (!resolvedExercise) return null;
+
+    const category = resolvedExercise.category;
+    if (typeof category === 'object' && category?.title) {
+      return category.title;
+    }
+
+    if (typeof category === 'string' || typeof category === 'number') {
+      return getCategoryById(category)?.title ?? null;
+    }
+
+    return null;
   };
 
   const handlePrefillQuickFormFromSet = (set: WorkoutSet) => {
@@ -366,23 +400,38 @@ export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreen
                 </div>
                 {/* Sets for this day */}
                 <ul className="divide-y divide-border/50">
-                  {group.sets.map((set) => (
+                  {group.sets.map((set) => {
+                    const categoryName = getSetCategoryName(set);
+                    const compactCategory = categoryName ? abbreviateLabel(categoryName, 14) : null;
+
+                    return (
                     <li key={set.id}>
                       <div className="flex items-center bg-card hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 px-4 py-3">
-                          <div className="flex items-center justify-between">
-                            <button
-                              type="button"
-                              className="font-medium text-foreground text-left hover:text-primary transition-colors"
-                              onClick={() => {
-                                const exerciseId = resolveSetExerciseId(set);
-                                if (!exerciseId || !onOpenExercise) return;
-                                onOpenExercise(exerciseId);
-                              }}
-                            >
-                              {getExerciseName(set)}
-                            </button>
-                            <span className="text-xs text-muted-foreground">
+                        <div className="min-w-0 flex-1 px-4 py-3">
+                          <div className="flex min-w-0 items-center justify-between gap-2">
+                            <div className="min-w-0 flex flex-1 items-center gap-2">
+                              <button
+                                type="button"
+                                className="min-w-0 flex-1 truncate font-medium text-foreground text-left hover:text-primary transition-colors"
+                                onClick={() => {
+                                  const exerciseId = resolveSetExerciseId(set);
+                                  if (!exerciseId || !onOpenExercise) return;
+                                  onOpenExercise(exerciseId);
+                                }}
+                              >
+                                {getExerciseName(set)}
+                              </button>
+                              {compactCategory ? (
+                                <Badge
+                                  variant="outline"
+                                  className="max-w-[8.5rem] shrink-0 truncate text-[11px]"
+                                  title={categoryName ?? undefined}
+                                >
+                                  {compactCategory}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <span className="shrink-0 text-xs text-muted-foreground">
                               {formatTime(set.created_at)}
                             </span>
                           </div>
@@ -423,7 +472,8 @@ export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreen
                         </DropdownMenu>
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             ))}

@@ -234,8 +234,8 @@ export function ExerciseDetailsScreen({ exerciseId, onBack, onOpenSetsList }: Ex
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
-      <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
-        <h1 className="truncate text-lg font-semibold text-foreground">{exercise?.title || 'Упражнение'}</h1>
+      <div className="flex min-w-0 items-center justify-between border-b border-border bg-card px-4 py-3">
+        <h1 className="min-w-0 truncate text-lg font-semibold text-foreground">{exercise?.title || 'Упражнение'}</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="ghost" size="icon" className="-mr-2" disabled={!exercise}>
@@ -269,12 +269,18 @@ export function ExerciseDetailsScreen({ exerciseId, onBack, onOpenSetsList }: Ex
 
       <div className="space-y-4 px-4 py-4">
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between gap-2">
-            <div>
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">Упражнение</p>
-              <p className="mt-1 text-base font-semibold text-foreground">{exercise?.title || 'Не найдено'}</p>
+              <p className="min-w-0 truncate text-base font-semibold text-foreground">{exercise?.title || 'Не найдено'}</p>
             </div>
-            {category ? <Badge variant="outline">{category.title}</Badge> : null}
+            {category ? (
+              <div className="min-w-0 max-w-[8rem] flex-shrink-0">
+                <Badge variant="outline" className="w-full truncate" title={category.title}>
+                  {category.title}
+                </Badge>
+              </div>
+            ) : null}
           </div>
           {exercise?.short ? <p className="mt-2 text-sm text-muted-foreground">Сокращение: {exercise.short}</p> : null}
         </div>

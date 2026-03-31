@@ -228,9 +228,9 @@ export function ExercisesScreen({ categoryId, categoryTitle, onOpenExercise }: E
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+      <div className="flex min-w-0 items-center justify-between px-4 py-3 border-b border-border bg-card">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-foreground truncate">{categoryTitle}</h1>
+          <h1 className="min-w-0 text-xl font-semibold text-foreground truncate">{categoryTitle}</h1>
           <p className="text-sm text-muted-foreground">
             {filteredExercises.length} {showArchived ? 'в архиве' : 'упражнений'}
           </p>
@@ -288,16 +288,16 @@ export function ExercisesScreen({ categoryId, categoryTitle, onOpenExercise }: E
             {filteredExercises.map((exercise) => (
               <li key={exercise.id}>
                 <div className={cn(
-                  "flex items-center bg-card hover:bg-muted/50 transition-colors",
+                  "flex min-w-0 items-center bg-card hover:bg-muted/50 transition-colors",
                   exercise.is_archived && "opacity-60"
                 )}>
                   <button
                     type="button"
-                    className="flex-1 px-4 py-3.5 text-left"
+                    className="flex-1 min-w-0 px-4 py-3.5 text-left"
                     onClick={() => onOpenExercise?.(exercise.id)}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{exercise.title}</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 truncate font-medium text-foreground">{exercise.title}</span>
                       {exercise.is_archived && (
                         <Badge variant="secondary" className="text-xs">Архив</Badge>
                       )}

@@ -3,6 +3,24 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const inputType = type ?? 'text'
+    const trimSupported = ['text', 'search', 'email', 'url', 'tel', 'password'].includes(inputType)
+
+    if (trimSupported) {
+      const currentValue = event.currentTarget.value
+      const trimmedValue = currentValue.trim()
+
+      if (trimmedValue !== currentValue) {
+        event.currentTarget.value = trimmedValue
+        // Trigger React's onChange listeners for controlled inputs.
+        event.currentTarget.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+    }
+
+    props.onBlur?.(event)
+  }
+
   return (
     <input
       type={type}
@@ -13,6 +31,7 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
         className,
       )}
+      onBlur={handleBlur}
       {...props}
     />
   )

@@ -35,7 +35,11 @@ import { ExercisesScreen } from './exercises-screen';
 import { Empty } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 
-export function CategoriesScreen() {
+interface CategoriesScreenProps {
+  onOpenExercise?: (exerciseId: EntityId) => void;
+}
+
+export function CategoriesScreen({ onOpenExercise }: CategoriesScreenProps) {
   const { 
     categories, 
     loadCategories, 
@@ -140,6 +144,7 @@ export function CategoriesScreen() {
       <ExercisesScreen 
         categoryId={selectedCategoryId}
         categoryTitle={selectedCategory?.title || 'Упражнения'}
+        onOpenExercise={onOpenExercise}
       />
     );
   }

@@ -258,7 +258,11 @@ export function ExercisePicker({
             <ChevronDown className="ml-2 size-4 shrink-0 opacity-60" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(32rem,calc(100vw-2rem))] p-0" align="start">
+        <PopoverContent
+          className="w-[min(32rem,calc(100vw-2rem))] p-0"
+          align="start"
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
           <Command shouldFilter={false}>
             <CommandInput
               placeholder={searchPlaceholder}

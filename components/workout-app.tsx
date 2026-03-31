@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppProvider } from '@/lib/app-context';
 import { useApp } from '@/lib/app-context';
+import { useTelegram } from '@/hooks/use-telegram';
 import { BottomNavigation, type TabId } from './bottom-navigation';
 import { CategoriesScreen } from './screens/categories-screen';
 import { TemplatesScreen } from './screens/templates-screen';
 import { SetsScreen } from './screens/sets-screen';
+import { ExerciseDetailsScreen } from '@/components/screens/exercise-details-screen';
 import { Toaster } from '@/components/ui/sonner';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -14,9 +16,33 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabId>('sets');
   const [setsScrollToTopSignal, setSetsScrollToTopSignal] = useState(0);
-  const { isLoading, isAuthenticated, setSelectedCategoryId } = useApp();
+  const {
+    isLoading,
+    isAuthenticated,
+    selectedExerciseId,
+    loadSets,
+    setSelectedCategoryId,
+    setSelectedExerciseId,
+    setSetFilters,
+  } = useApp();
+  const { haptic, showBackButton, hideBackButton } = useTelegram();
+
+  useEffect(() => {
+    if (!selectedExerciseId) return;
+
+    showBackButton(() => {
+      setSelectedExerciseId(null);
+      haptic?.impactOccurred('light');
+    });
+
+    return () => hideBackButton();
+  }, [selectedExerciseId, showBackButton, hideBackButton, setSelectedExerciseId, haptic]);
 
   const handleTabChange = (tab: TabId) => {
+    if (selectedExerciseId) {
+      setSelectedExerciseId(null);
+    }
+
     if (tab === 'sets') {
       setSetsScrollToTopSignal(prev => prev + 1);
     }
@@ -26,6 +52,11 @@ function AppContent() {
       setSelectedCategoryId(null);
     }
     setActiveTab(tab);
+  };
+
+  const handleOpenExerciseDetails = (exerciseId: string | number) => {
+    setSelectedExerciseId(exerciseId);
+    haptic?.impactOccurred('light');
   };
 
   if (isLoading) {
@@ -53,9 +84,30 @@ function AppContent() {
     <div className="h-dvh overflow-hidden bg-background flex flex-col">
       {/* Main Content */}
       <main className="flex-1 min-h-0 overflow-hidden pb-14 safe-area-top">
-        {activeTab === 'categories' && <CategoriesScreen />}
-        {activeTab === 'templates' && <TemplatesScreen />}
-        {activeTab === 'sets' && <SetsScreen scrollToTopSignal={setsScrollToTopSignal} />}
+        {selectedExerciseId ? (
+          <ExerciseDetailsScreen
+            exerciseId={selectedExerciseId}
+            onOpenSetsList={async () => {
+              setSetFilters({ exercise_id: selectedExerciseId });
+              await loadSets({ exercise_id: selectedExerciseId });
+              setSelectedExerciseId(null);
+              setActiveTab('sets');
+            }}
+            onBack={() => setSelectedExerciseId(null)}
+          />
+        ) : null}
+        {!selectedExerciseId && activeTab === 'categories' && (
+          <CategoriesScreen onOpenExercise={handleOpenExerciseDetails} />
+        )}
+        {!selectedExerciseId && activeTab === 'templates' && (
+          <TemplatesScreen onOpenExercise={handleOpenExerciseDetails} />
+        )}
+        {!selectedExerciseId && activeTab === 'sets' && (
+          <SetsScreen
+            scrollToTopSignal={setsScrollToTopSignal}
+            onOpenExercise={handleOpenExerciseDetails}
+          />
+        )}
       </main>
 
       {/* Bottom Navigation */}

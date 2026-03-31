@@ -44,7 +44,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { ExercisePicker } from '@/components/exercise-picker';
 
-export function TemplatesScreen() {
+interface TemplatesScreenProps {
+  onOpenExercise?: (exerciseId: EntityId) => void;
+}
+
+export function TemplatesScreen({ onOpenExercise }: TemplatesScreenProps) {
   const templatesInDevelopment = true;
 
   const { 
@@ -91,11 +95,14 @@ export function TemplatesScreen() {
 
   const idsEqual = (a: EntityId, b: EntityId): boolean => String(a) === String(b);
 
-  const getExerciseNames = (template: Template): string[] => {
+  const getTemplateExercisesForDisplay = (template: Template): Array<{ id: EntityId; label: string }> => {
     const ids = getExerciseIds(template);
     return ids.map(id => {
       const exercise = exercises.find(e => idsEqual(e.id, id));
-      return exercise?.title || `Упражнение #${id}`;
+      return {
+        id,
+        label: exercise?.title || `Упражнение #${id}`,
+      };
     });
   };
 
@@ -387,7 +394,7 @@ export function TemplatesScreen() {
         ) : (
           <ul className="divide-y divide-border">
             {templates.map((template) => {
-              const exerciseNames = getExerciseNames(template);
+              const templateExercises = getTemplateExercisesForDisplay(template);
               return (
                 <li key={template.id}>
                   <div className="flex items-start bg-card hover:bg-muted/50 transition-colors">
@@ -401,10 +408,19 @@ export function TemplatesScreen() {
                           </Badge>
                         )}
                       </div>
-                      {exerciseNames.length > 0 && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {exerciseNames.join(', ')}
-                        </p>
+                      {templateExercises.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {templateExercises.map((item) => (
+                            <button
+                              key={String(item.id)}
+                              type="button"
+                              onClick={() => onOpenExercise?.(item.id)}
+                              className="rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <DropdownMenu>

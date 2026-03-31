@@ -34,6 +34,7 @@ interface AppState {
   
   // Selected items
   selectedCategoryId: EntityId | null;
+  selectedExerciseId: EntityId | null;
 }
 
 interface AppContextType extends AppState {
@@ -67,6 +68,7 @@ interface AppContextType extends AppState {
   
   // Selection
   setSelectedCategoryId: (id: EntityId | null) => void;
+  setSelectedExerciseId: (id: EntityId | null) => void;
   
   // Helpers
   getExerciseById: (id: EntityId) => Exercise | undefined;
@@ -88,6 +90,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
     setFilters: {},
     selectedCategoryId: null,
+    selectedExerciseId: null,
   });
 
   // Authentication
@@ -345,6 +348,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, selectedCategoryId: id }));
   }, []);
 
+  const setSelectedExerciseId = useCallback((id: EntityId | null) => {
+    setState(prev => ({ ...prev, selectedExerciseId: id }));
+  }, []);
+
   // Helpers
   const getExerciseById = useCallback((id: EntityId) => {
     return state.exercises.find(e => e.id === id);
@@ -377,6 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSetFilters,
     groupedSets,
     setSelectedCategoryId,
+    setSelectedExerciseId,
     getExerciseById,
     getCategoryById,
   };

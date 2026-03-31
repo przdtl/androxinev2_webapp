@@ -39,9 +39,10 @@ import { ExercisePicker } from '@/components/exercise-picker';
 
 interface SetsScreenProps {
   scrollToTopSignal?: number;
+  onOpenExercise?: (exerciseId: EntityId) => void;
 }
 
-export function SetsScreen({ scrollToTopSignal = 0 }: SetsScreenProps) {
+export function SetsScreen({ scrollToTopSignal = 0, onOpenExercise }: SetsScreenProps) {
   const { 
     sets,
     exercises,
@@ -370,7 +371,17 @@ export function SetsScreen({ scrollToTopSignal = 0 }: SetsScreenProps) {
                       <div className="flex items-center bg-card hover:bg-muted/50 transition-colors">
                         <div className="flex-1 px-4 py-3">
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-foreground">{getExerciseName(set)}</span>
+                            <button
+                              type="button"
+                              className="font-medium text-foreground text-left hover:text-primary transition-colors"
+                              onClick={() => {
+                                const exerciseId = resolveSetExerciseId(set);
+                                if (!exerciseId || !onOpenExercise) return;
+                                onOpenExercise(exerciseId);
+                              }}
+                            >
+                              {getExerciseName(set)}
+                            </button>
                             <span className="text-xs text-muted-foreground">
                               {formatTime(set.created_at)}
                             </span>

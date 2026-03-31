@@ -36,13 +36,15 @@ import { Empty } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { buildExerciseShort } from '@/lib/exercise-short';
 
 interface ExercisesScreenProps {
   categoryId: EntityId;
   categoryTitle: string;
+  onOpenExercise?: (exerciseId: EntityId) => void;
 }
 
-export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenProps) {
+export function ExercisesScreen({ categoryId, categoryTitle, onOpenExercise }: ExercisesScreenProps) {
   const { 
     exercises, 
     loadExercises, 
@@ -66,6 +68,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastAutoShort, setLastAutoShort] = useState('');
 
   useEffect(() => {
     setIsLoading(true);
@@ -92,6 +95,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   const handleOpenCreate = () => {
     setEditingExercise(null);
     setFormData({ title: '', short: '', category_id: categoryId });
+    setLastAutoShort('');
     setIsDialogOpen(true);
     haptic?.impactOccurred('light');
   };
@@ -104,8 +108,42 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
       short: exercise.short,
       category_id: catId,
     });
+    setLastAutoShort('');
     setIsDialogOpen(true);
     haptic?.impactOccurred('light');
+  };
+
+  const handleTitleChange = (title: string) => {
+    const trimmedTitle = title;
+    let nextAutoShort: string | null = null;
+
+    setFormData((prev) => {
+      const currentShort = prev.short ?? '';
+      const shouldAutoFill = currentShort.trim() === '' || currentShort === lastAutoShort;
+
+      if (!shouldAutoFill) {
+        return { ...prev, title: trimmedTitle };
+      }
+
+      nextAutoShort = buildExerciseShort(trimmedTitle);
+      return {
+        ...prev,
+        title: trimmedTitle,
+        short: nextAutoShort,
+      };
+    });
+
+    if (nextAutoShort !== null) {
+      setLastAutoShort(nextAutoShort);
+    }
+  };
+
+  const handleShortChange = (short: string) => {
+    setFormData((prev) => ({ ...prev, short }));
+
+    if (short !== lastAutoShort) {
+      setLastAutoShort('');
+    }
   };
 
   const handleOpenDelete = (exercise: Exercise) => {
@@ -135,19 +173,28 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim()) return;
+    const title = formData.title.trim();
+    if (!title) return;
+
+    const short = formData.short?.trim() || buildExerciseShort(title);
+    const payload: ExerciseFormData = {
+      title,
+      short,
+      category_id: formData.category_id,
+    };
     
     setIsSubmitting(true);
     try {
       if (editingExercise) {
-        await updateExercise(editingExercise.id, formData);
+        await updateExercise(editingExercise.id, payload);
         haptic?.notificationOccurred('success');
       } else {
-        await createExercise(formData);
+        await createExercise(payload);
         haptic?.notificationOccurred('success');
       }
       setIsDialogOpen(false);
       setFormData({ title: '', short: '', category_id: categoryId });
+      setLastAutoShort('');
     } catch (error) {
       console.error('Failed to save exercise:', error);
       haptic?.notificationOccurred('error');
@@ -244,7 +291,11 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
                   "flex items-center bg-card hover:bg-muted/50 transition-colors",
                   exercise.is_archived && "opacity-60"
                 )}>
-                  <div className="flex-1 px-4 py-3.5">
+                  <button
+                    type="button"
+                    className="flex-1 px-4 py-3.5 text-left"
+                    onClick={() => onOpenExercise?.(exercise.id)}
+                  >
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-foreground">{exercise.title}</span>
                       {exercise.is_archived && (
@@ -254,7 +305,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
                     {exercise.short && (
                       <p className="text-sm text-muted-foreground mt-0.5">{exercise.short}</p>
                     )}
-                  </div>
+                  </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="mr-2">
@@ -310,7 +361,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
               <Input
                 id="exercise-title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Например: Жим лёжа"
                 autoFocus
               />
@@ -320,7 +371,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
               <Input
                 id="exercise-short"
                 value={formData.short}
-                onChange={(e) => setFormData(prev => ({ ...prev, short: e.target.value }))}
+                onChange={(e) => handleShortChange(e.target.value)}
                 placeholder="Например: ЖЛ"
               />
             </Field>

@@ -77,6 +77,7 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { initData, isReady } = useTelegram();
+  const TOKEN_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
   
   const [state, setState] = useState<AppState>({
     categories: [],
@@ -113,6 +114,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     authenticate();
   }, [initData, isReady]);
+
+  // Configure refresh strategy for expired JWT and periodic renewal.
+  useEffect(() => {
+    if (!isReady || !initData) {
+      api.setRefreshTokenHandler(null);
+      return;
+    }
+
+    const refresh = async (): Promise<string | null> => {
+      try {
+        const { access_token } = await api.authTelegram(initData);
+        api.setToken(access_token);
+        setState(prev => ({ ...prev, isAuthenticated: true }));
+        return access_token;
+      } catch (error) {
+        console.error('Token refresh error:', error);
+        return null;
+      }
+    };
+
+    api.setRefreshTokenHandler(refresh);
+
+    const intervalId = window.setInterval(() => {
+      void refresh();
+    }, TOKEN_REFRESH_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+      api.setRefreshTokenHandler(null);
+    };
+  }, [initData, isReady, TOKEN_REFRESH_INTERVAL_MS]);
 
   // Categories
   const loadCategories = useCallback(async () => {

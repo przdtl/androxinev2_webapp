@@ -45,9 +45,9 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-dvh overflow-hidden bg-background flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 pb-14 safe-area-top">
+      <main className="flex-1 min-h-0 overflow-hidden pb-14 safe-area-top">
         {activeTab === 'categories' && <CategoriesScreen />}
         {activeTab === 'templates' && <TemplatesScreen />}
         {activeTab === 'sets' && <SetsScreen />}

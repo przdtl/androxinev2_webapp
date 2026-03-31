@@ -88,6 +88,8 @@ function toTemplateExerciseCreateInput(exerciseId: string | number, order: numbe
 
 class ApiClient {
   private token: string | null = null;
+  private refreshTokenHandler: (() => Promise<string | null>) | null = null;
+  private refreshInFlight: Promise<string | null> | null = null;
 
   setToken(token: string) {
     this.token = token;
@@ -97,23 +99,61 @@ class ApiClient {
     return this.token;
   }
 
+  setRefreshTokenHandler(handler: (() => Promise<string | null>) | null) {
+    this.refreshTokenHandler = handler;
+  }
+
+  private async refreshToken(): Promise<string | null> {
+    if (!this.refreshTokenHandler) return null;
+
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.refreshTokenHandler()
+        .then((newToken) => {
+          if (newToken) {
+            this.token = newToken;
+          }
+          return newToken;
+        })
+        .finally(() => {
+          this.refreshInFlight = null;
+        });
+    }
+
+    return this.refreshInFlight;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+    const execute = async (): Promise<Response> => {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+
+      if (this.token) {
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      return fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
     };
 
-    if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
-    }
+    let response = await execute();
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    if (
+      response.status === 401 &&
+      endpoint !== '/auth/telegram/' &&
+      this.refreshTokenHandler
+    ) {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        response = await execute();
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));

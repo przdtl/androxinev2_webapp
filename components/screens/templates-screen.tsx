@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, MoreVertical, Pencil, Trash2, Calendar, ListChecks } from 'lucide-react';
+import { Plus, MoreVertical, Pencil, Trash2, Calendar, ListChecks, X } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
 import type { Template, TemplateFormData, EntityId } from '@/lib/types';
@@ -42,8 +42,7 @@ import { Field, FieldLabel, FieldGroup } from '@/components/ui/field';
 import { Empty } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ExercisePicker } from '@/components/exercise-picker';
 
 export function TemplatesScreen() {
   const { 
@@ -309,30 +308,38 @@ export function TemplatesScreen() {
                     Нет доступных упражнений. Создайте упражнения в разделе категорий.
                   </p>
                 ) : (
-                  <ScrollArea className="h-48 rounded-md border border-input">
-                    <div className="p-3 space-y-2">
-                      {activeExercises.map((exercise) => (
-                        <label
-                          key={exercise.id}
-                          className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={formData.exercises.some(id => idsEqual(id, exercise.id))}
-                            onCheckedChange={() => handleToggleExercise(exercise.id)}
-                          />
-                          <span className="text-sm">{exercise.title}</span>
-                          {exercise.short && (
-                            <span className="text-xs text-muted-foreground">({exercise.short})</span>
-                          )}
-                        </label>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <ExercisePicker
+                    exercises={activeExercises}
+                    selectedIds={formData.exercises}
+                    onChange={(ids) => setFormData(prev => ({ ...prev, exercises: ids }))}
+                    multiple
+                    placeholder="Выберите упражнения"
+                    searchPlaceholder="Поиск упражнения..."
+                    recentStorageKey="templates-exercises-recent"
+                  />
                 )}
                 {formData.exercises.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Выбрано: {formData.exercises.length}
-                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {formData.exercises.map((exerciseId) => {
+                      const exercise = exercises.find((item) => idsEqual(item.id, exerciseId));
+                      const label = exercise?.title || `Упражнение #${exerciseId}`;
+                      return (
+                        <Badge key={String(exerciseId)} variant="secondary" className="gap-1 pl-2 pr-1">
+                          <span>{label}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-5"
+                            onClick={() => handleToggleExercise(exerciseId)}
+                          >
+                            <X className="size-3" />
+                            <span className="sr-only">Удалить упражнение</span>
+                          </Button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
                 )}
               </Field>
             </FieldGroup>

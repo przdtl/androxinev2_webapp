@@ -291,6 +291,7 @@ export function ExercisesScreen({ categoryId, categoryTitle }: ExercisesScreenPr
                 </div>
               </li>
             ))}
+            <li aria-hidden="true" className="h-[env(safe-area-inset-bottom)]" />
           </ul>
         )}
       </div>

@@ -221,6 +221,7 @@ export function CategoriesScreen() {
                 </div>
               </li>
             ))}
+            <li aria-hidden="true" className="h-[env(safe-area-inset-bottom)]" />
           </ul>
         )}
       </div>

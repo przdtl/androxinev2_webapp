@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MoreVertical, Pencil, Trash2, Filter, X, ClipboardList, Repeat } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { useTelegram } from '@/hooks/use-telegram';
@@ -37,7 +37,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { ExercisePicker } from '@/components/exercise-picker';
 
-export function SetsScreen() {
+interface SetsScreenProps {
+  scrollToTopSignal?: number;
+}
+
+export function SetsScreen({ scrollToTopSignal = 0 }: SetsScreenProps) {
   const { 
     sets,
     exercises,
@@ -71,6 +75,7 @@ export function SetsScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuickSubmitting, setIsQuickSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Local filter state
   const [localFilters, setLocalFilters] = useState({
@@ -139,8 +144,13 @@ export function SetsScreen() {
     });
 
     haptic?.selectionChanged();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [scrollToTopSignal]);
 
   const handleOpenEdit = (set: WorkoutSet) => {
     setEditingSet(set);
@@ -252,6 +262,7 @@ export function SetsScreen() {
 
   return (
     <div
+      ref={scrollContainerRef}
       className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
@@ -405,6 +416,7 @@ export function SetsScreen() {
                 </ul>
               </div>
             ))}
+            <div aria-hidden="true" className="h-[env(safe-area-inset-bottom)]" />
           </div>
         )}
       </div>

@@ -13,9 +13,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabId>('sets');
+  const [setsScrollToTopSignal, setSetsScrollToTopSignal] = useState(0);
   const { isLoading, isAuthenticated, setSelectedCategoryId } = useApp();
 
   const handleTabChange = (tab: TabId) => {
+    if (tab === 'sets') {
+      setSetsScrollToTopSignal(prev => prev + 1);
+    }
+
     // Tab click should always bring user to the tab root page.
     if (tab === 'categories') {
       setSelectedCategoryId(null);
@@ -50,7 +55,7 @@ function AppContent() {
       <main className="flex-1 min-h-0 overflow-hidden pb-14 safe-area-top">
         {activeTab === 'categories' && <CategoriesScreen />}
         {activeTab === 'templates' && <TemplatesScreen />}
-        {activeTab === 'sets' && <SetsScreen />}
+        {activeTab === 'sets' && <SetsScreen scrollToTopSignal={setsScrollToTopSignal} />}
       </main>
 
       {/* Bottom Navigation */}
